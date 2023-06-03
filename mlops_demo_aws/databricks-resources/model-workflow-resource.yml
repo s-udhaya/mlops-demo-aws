@@ -10,7 +10,6 @@ model_workflow_cluster: &model_workflow_cluster
   new_cluster:
     num_workers: 3
     spark_version: 13.0.x-cpu-ml-scala2.12
-    driver_instance_pool_id: '0603-175909-lent44-pool-5losrriq'
     instance_pool_id: '0603-175909-lent44-pool-5losrriq'
     custom_tags:
       clusterSource: mlops-stack/0.1
@@ -82,6 +81,17 @@ resources:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+        - task_key: ModelServing
+          job_cluster_key: model_training_job_cluster
+          depends_on:
+            - task_key: ModelDeployment
+          notebook_task:
+            notebook_path: ../deployment/model_serving/notebooks/ModelServing.py
+            base_parameters:
+              env: ${bundle.environment}
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
       schedule:
         quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
         timezone_id: UTC
