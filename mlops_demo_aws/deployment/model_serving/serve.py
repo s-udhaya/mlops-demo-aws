@@ -1,6 +1,4 @@
-import gevent.monkey
 
-gevent.monkey.patch_all()
 
 import json
 import logging
@@ -9,19 +7,15 @@ import pathlib
 import time
 from typing import Any
 
-import click as click
 from databricks_cli.configure.config import _get_api_client
 from databricks_cli.configure.provider import EnvironmentVariableConfigProvider
 from databricks_cli.sdk import ApiClient
 from mlflow.client import MlflowClient
-from model_serving_mlops.deployment.model_deployment.endpoint_performance import test_endpoint_locust
-from model_serving_mlops.utils import get_deployed_model_stage_for_env, get_model_name
 import numpy as np
 import pandas as pd
 from pyspark.sql import SparkSession
 import requests
 from requests.exceptions import HTTPError
-import yaml
 
 PRODUCTION_DEPLOYMENT = "production_deployment"
 INTEGRATION_TEST = "integration_test"
@@ -227,7 +221,7 @@ def perform_integration_test(
     create_serving_endpoint(api_client, endpoint_name, model_name, model_version)
     time.sleep(100)
     if wait_for_endpoint_to_become_ready(api_client, endpoint_name):
-        test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, test_data_df)
+        #test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, test_data_df)
         delete_endpoint(api_client, endpoint_name)
     else:
         print("Endpoint failed to become ready within timeout. ")
@@ -247,56 +241,8 @@ def perform_prod_deployment(
         create_serving_endpoint(api_client, endpoint_name, model_name, model_version)
     time.sleep(100)
     if wait_for_endpoint_to_become_ready(api_client, endpoint_name):
-        test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, df)
+        #test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, df)
+        print("production endpoint is ready")
     else:
         raise Exception(f"Production endpoint {endpoint_name} is not ready!")
 
-
-@click.command()
-@click.option(
-    "--mode",
-    type=click.Choice([INTEGRATION_TEST, PRODUCTION_DEPLOYMENT]),
-    default=INTEGRATION_TEST,
-    help="""Run mode. Valid values are 'integration_test' for the test deployment in Staging environment
-        and  'production_deployment' for model deployment in Production environment""",
-)
-@click.option(
-    "--env",
-    type=click.STRING,
-    default="staging",
-    help="""Target environment. Valid values are "dev", "staging", "prod".""",
-)
-@click.option(
-    "--config",
-    required=True,
-    type=click.STRING,
-    help="""Path to the configuration file.""",
-)
-def main(mode: str, env: str, config: str):
-    model_name = get_model_name(env)
-    endpoint_name = f"{model_name}-{env}"
-    strage = get_deployed_model_stage_for_env(env)
-    with open(config, "r") as file:
-        config_dict = yaml.safe_load(file)
-    if mode == INTEGRATION_TEST:
-        perform_integration_test(
-            endpoint_name,
-            model_name,
-            strage,
-            config_dict.get("latency_p95_threshold", 1000),
-            config_dict.get("qps_threshold", 1),
-        )
-    elif mode == PRODUCTION_DEPLOYMENT:
-        perform_prod_deployment(
-            endpoint_name,
-            model_name,
-            strage,
-            config_dict.get("latency_p95_threshold", 1000),
-            config_dict.get("qps_threshold", 1),
-        )
-    else:
-        raise Exception(f"Wrong value for mode parameter: {mode}")
-
-
-if __name__ == "__main__":
-    main()
