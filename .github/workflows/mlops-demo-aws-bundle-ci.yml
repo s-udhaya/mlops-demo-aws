@@ -17,6 +17,7 @@ env:
 
 jobs:
   staging:
+    permissions: write-all
     concurrency: mlops-demo-aws-staging-bundle-job
     runs-on: ubuntu-20.04
     steps:
@@ -55,6 +56,7 @@ jobs:
             })
 
   prod:
+    permissions: write-all
     concurrency: mlops-demo-aws-prod-bundle-job
     runs-on: ubuntu-20.04
     steps:
