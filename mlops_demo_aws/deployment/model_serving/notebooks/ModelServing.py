@@ -35,9 +35,12 @@ dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
 
 
 # COMMAND ----------
+import os
 import sys
-
-sys.path.append("..")
+notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+%cd $notebook_path
+%cd ..
+sys.path.append("../..")
 
 # COMMAND ----------
 env = dbutils.widgets.get("env")
@@ -45,13 +48,15 @@ _test_mode = dbutils.widgets.get("test_mode")
 test_mode = True if _test_mode.lower() == "true" else False
 model_name = dbutils.jobs.taskValues.get("Train", "model_name", debugValue="")
 model_version = dbutils.jobs.taskValues.get("Train", "model_version", debugValue="")
+print(f"model name: {model_name}")
+print(f"model version: {model_version}")
 assert env != "None", "env notebook parameter must be specified"
 assert model_name != "", "model_name notebook parameter must be specified"
 assert model_version != "", "model_version notebook parameter must be specified"
 
 
 # COMMAND ----------
-from mlops_demo_aws.deployment.model_serving.serve import (
+from serve import (
     perform_prod_deployment,
     perform_integration_test,
 )
