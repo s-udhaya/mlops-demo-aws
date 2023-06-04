@@ -35,16 +35,16 @@ dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
 
 # COMMAND ----------
 
-# MAGIC %pip install git+https://github.com/sebrahimi1988/databricks-model-serving
+# import os
+# import sys
+# notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+# %cd $notebook_path
+# %cd ..
+# sys.path.append("../..")
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
-
-# COMMAND ----------
-
-import mlflow
-from databricks.model_serving.client import EndpointClient
+from client import EndpointClient
 
 # get API URL and token
 databricks_url = dbutils.secrets.get(scope = "tokens", key = "db_host_mlops")
@@ -127,11 +127,4 @@ while endpoint['state']['config_update'] == "IN_PROGRESS":
 
 client.get_inference_endpoint(endpoint_name)
 
-# COMMAND ----------
 
-# import os
-# import sys
-# notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-# %cd $notebook_path
-# %cd ..
-# sys.path.append("../..")
