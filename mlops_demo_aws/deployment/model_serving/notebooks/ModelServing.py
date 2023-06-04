@@ -86,13 +86,6 @@ assert model_version != "", "model_version notebook parameter must be specified"
 
 # COMMAND ----------
 
-env = "staging"
-model_name = "staging-mlops-demo-aws-model"
-model_version = "3"
-endpoint_name = f"{model_name}-endpoint"
-
-# COMMAND ----------
-
 # env = "staging"
 # model_name = "staging-mlops-demo-aws-model"
 # model_version = "3"
