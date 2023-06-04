@@ -47,21 +47,20 @@ import mlflow
 from databricks.model_serving.client import EndpointClient
 
 # get API URL and token
-databricks_url = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().getOrElse(None)
-databricks_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().getOrElse(None)
+databricks_url = dbutils.secrets.get(scope = "tokens", key = "db_host_mlops")
+databricks_token = dbutils.secrets.get(scope = "tokens", key = "db_token_mlops")
 
 # COMMAND ----------
 
-mlflow_client = mlflow.MlflowClient()
 client = EndpointClient(databricks_url, databricks_token)
 
 # COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## List existing endpoints
 
 # COMMAND ----------
 
-client = EndpointClient(databricks_url, databricks_token)
 client.list_inference_endpoints()
 
 # COMMAND ----------
@@ -73,6 +72,7 @@ client.list_inference_endpoints()
 # MAGIC In the endpoint object returned by the create call, we can see that our endpoint’s update state is `IN_PROGRESS` and our served model is in a `CREATING` state. The `pending_config` field shows the details of the update in progress.
 
 # COMMAND ----------
+
 env = dbutils.widgets.get("env")
 _test_mode = dbutils.widgets.get("test_mode")
 test_mode = True if _test_mode.lower() == "true" else False
@@ -86,10 +86,10 @@ assert model_version != "", "model_version notebook parameter must be specified"
 
 # COMMAND ----------
 
-env = "staging"
-model_name = "staging-mlops-demo-aws-model"
-model_version = "3"
-endpoint_name = f"{model_name}:version:{model_version}"
+# env = "staging"
+# model_name = "staging-mlops-demo-aws-model"
+# model_version = "3"
+endpoint_name = f"{model_name}_version_{model_version}"
 models = [
     {
         "model_name": model_name,
@@ -128,9 +128,10 @@ while endpoint['state']['config_update'] == "IN_PROGRESS":
 client.get_inference_endpoint(endpoint_name)
 
 # COMMAND ----------
-import os
-import sys
-notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-%cd $notebook_path
-%cd ..
-sys.path.append("../..")
+
+# import os
+# import sys
+# notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+# %cd $notebook_path
+# %cd ..
+# sys.path.append("../..")
