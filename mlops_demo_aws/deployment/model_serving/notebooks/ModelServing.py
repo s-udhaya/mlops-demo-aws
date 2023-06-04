@@ -35,12 +35,12 @@ dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
 
 # COMMAND ----------
 
-# import os
-# import sys
-# notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-# %cd $notebook_path
-# %cd ..
-# sys.path.append("../..")
+import os
+import sys
+notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+%cd $notebook_path
+%cd ..
+sys.path.append("../..")
 
 # COMMAND ----------
 
@@ -83,6 +83,43 @@ print(f"model version: {model_version}")
 assert env != "None", "env notebook parameter must be specified"
 assert model_name != "", "model_name notebook parameter must be specified"
 assert model_version != "", "model_version notebook parameter must be specified"
+
+# COMMAND ----------
+
+endpoint_interface = client.get_inference_endpoint(endpoint_name)
+
+# COMMAND ----------
+
+env = "staging"
+model_name = "staging-mlops-demo-aws-model"
+model_version = "3"
+endpoint_name = f"{model_name}-endpoint"
+
+dbfs_table_path = "/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables"
+
+data = {
+    "name": endpoint_name,
+    "config": {
+        "served_models": [
+    {
+        "model_name": model_name,
+        "model_version": model_version,
+        "workload_size": "Small",
+        "scale_to_zero_enabled": False,
+    }
+        ]
+    },
+    "inference_table_config": {
+        "dbfs_destination_path": dbfs_table_path
+    }
+}
+try:
+    endpoint_interface = client.get_inference_endpoint(endpoint_name)
+    print(f"Endpoint {endpoint_name} is being updated")
+    client.update_served_models(data)
+except:
+    print(f"New endpoint {endpoint_name} is being created")
+    client.create_inference_endpoint(data)
 
 # COMMAND ----------
 

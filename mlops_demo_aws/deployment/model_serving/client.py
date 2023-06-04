@@ -1,7 +1,7 @@
 import json
 from typing import List, Dict
 import requests
-from databricks.model_serving.endpoint import Endpoint
+from endpoint import Endpoint
 
 
 class EndpointClient:
@@ -25,32 +25,8 @@ class EndpointClient:
         }
 
     def create_inference_endpoint(
-        self, endpoint_name: str, served_models: List[str], traffic_config: Dict = None
+        self, data: Dict = None
     ):
-        """
-                Creates inference endpoints for models.
-
-                endpoint_name: Serving endpoint name.
-                served_models: List of model names that will be deployed.
-                traffic_config: Traffic percentage split between served models. Example:
-                traffic_config = {
-                "routes": [
-                    {
-                        "served_model_name": "model1",
-                        "traffic_percentage": "25",
-                    },
-                    {
-                        "served_model_name": "model2",
-                        "traffic_percentage": "75",
-                    },
-                ]
-        }
-        """
-
-        config_dict = {"served_models": served_models}
-        if traffic_config is not None:
-            config_dict["traffic_config"] = traffic_config
-        data = {"name": endpoint_name, "config": config_dict}
         return self._post(uri=Endpoint.SERVING.value, body=data)
 
     def get_inference_endpoint(self, endpoint_name: str) -> Dict:
@@ -70,31 +46,9 @@ class EndpointClient:
         return self._get(Endpoint.SERVING.value)
 
     def update_served_models(
-        self, endpoint_name: str, served_models: List[str], traffic_config: Dict = None
+            self, data: Dict = None
     ):
-        """
-        Updates served models with the specified traffic_config.
-
-        endpoint_name: Serving endpoint name.
-        served_models: List of served models.
-        traffic_config: New traffic split configuration. Example:
-        traffic_config = {
-        "routes": [
-            {
-                "served_model_name": "model1",
-                "traffic_percentage": "25",
-            },
-            {
-                "served_model_name": "model2",
-                "traffic_percentage": "75",
-            },
-        ]
-        """
-
-        config_dict = {"served_models": served_models}
-        if traffic_config is not None:
-            config_dict["traffic_config"] = traffic_config
-        return self._put(Endpoint.CONFIG.value.format(endpoint_name), config_dict)
+        return self._put(Endpoint.CONFIG.value.format(data["name"]), data)
 
     def delete_inference_endpoint(self, endpoint_name: str) -> Dict:
         """
