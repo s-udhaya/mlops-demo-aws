@@ -33,14 +33,44 @@ dbutils.widgets.dropdown("env", "None", ["None", "staging", "prod"], "Environmen
 # Test mode
 dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
 
+# COMMAND ----------
+
+# MAGIC %pip install git+https://github.com/sebrahimi1988/databricks-model-serving
 
 # COMMAND ----------
-import os
-import sys
-notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-%cd $notebook_path
-%cd ..
-sys.path.append("../..")
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
+import mlflow
+from databricks.model_serving.client import EndpointClient
+
+# get API URL and token
+databricks_url = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().getOrElse(None)
+databricks_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().getOrElse(None)
+
+# COMMAND ----------
+
+mlflow_client = mlflow.MlflowClient()
+client = EndpointClient(databricks_url, databricks_token)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## List existing endpoints
+
+# COMMAND ----------
+
+client = EndpointClient(databricks_url, databricks_token)
+client.list_inference_endpoints()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ## Create an endpoint with your model
+# MAGIC
+# MAGIC In the endpoint object returned by the create call, we can see that our endpoint’s update state is `IN_PROGRESS` and our served model is in a `CREATING` state. The `pending_config` field shows the details of the update in progress.
 
 # COMMAND ----------
 env = dbutils.widgets.get("env")
@@ -54,17 +84,53 @@ assert env != "None", "env notebook parameter must be specified"
 assert model_name != "", "model_name notebook parameter must be specified"
 assert model_version != "", "model_version notebook parameter must be specified"
 
+# COMMAND ----------
+
+env = "staging"
+model_name = "staging-mlops-demo-aws-model"
+model_version = "3"
+endpoint_name = f"{model_name}:version:{model_version}"
+models = [
+    {
+        "model_name": model_name,
+        "model_version": model_version,
+        "workload_size": "Small",
+        "scale_to_zero_enabled": False,
+    }
+]
+client.create_inference_endpoint(endpoint_name, models)
 
 # COMMAND ----------
-from serve import (
-    perform_prod_deployment,
-    perform_integration_test,
-)
 
-if test_mode:
-    endpoint_name = f"{model_name}-integration-test-endpoint"
-    perform_integration_test(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+client.list_inference_endpoints()
 
-elif not test_mode:
-    endpoint_name = f"{model_name}-v{model_version}"
-    perform_prod_deployment(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ## Check the state of your endpoint
+# MAGIC
+# MAGIC We can check on the status of our endpoint to see if it is ready to receive traffic. Note that when the update is complete and the endpoint is ready to be queried, the `pending_config` is no longer populated.
+
+# COMMAND ----------
+
+import time
+
+endpoint = client.get_inference_endpoint(endpoint_name)
+
+while endpoint['state']['config_update'] == "IN_PROGRESS":
+  time.sleep(5)
+  endpoint = client.get_inference_endpoint(endpoint_name)
+  print(endpoint["name"], endpoint["state"])
+
+# COMMAND ----------
+
+client.get_inference_endpoint(endpoint_name)
+
+# COMMAND ----------
+import os
+import sys
+notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+%cd $notebook_path
+%cd ..
+sys.path.append("../..")
