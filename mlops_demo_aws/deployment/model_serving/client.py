@@ -46,9 +46,9 @@ class EndpointClient:
         return self._get(Endpoint.SERVING.value)
 
     def update_served_models(
-            self, data: Dict = None
+            self, endpoint_name: str, config: Dict = None
     ):
-        return self._put(Endpoint.CONFIG.value.format(data["name"]), data)
+        return self._put(Endpoint.CONFIG.value.format(endpoint_name), config)
 
     def delete_inference_endpoint(self, endpoint_name: str) -> Dict:
         """
