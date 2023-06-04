@@ -8,7 +8,7 @@
 
 model_workflow_cluster: &model_workflow_cluster
   new_cluster:
-    num_workers: 0
+    num_workers: 1
     spark_version: 13.0.x-cpu-ml-scala2.12
     instance_pool_id: '0603-175909-lent44-pool-5losrriq'
     custom_tags:
