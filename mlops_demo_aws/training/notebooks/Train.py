@@ -37,22 +37,9 @@
 ##################################################################################
 
 # COMMAND ----------
+
 # MAGIC %load_ext autoreload
 # MAGIC %autoreload 2
-
-# COMMAND ----------
-
-import os
-notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-%cd $notebook_path
-
-# COMMAND ----------
-
-# MAGIC %pip install -r ../../requirements.txt
-
-# COMMAND ----------
-
-dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -63,8 +50,6 @@ notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.ge
 
 # COMMAND ----------
 
-from mlflow.recipes import Recipe
-
 try:
     # Profile from databricks workflow input will be used.
     env = dbutils.widgets.get("env")
@@ -72,6 +57,21 @@ try:
 except:
     # When the users manually run the notebook, we use the "databricks-dev" profile instead of staging, prod or test.
     profile = "databricks-dev"
+
+# COMMAND ----------
+
+import mlflow
+import sklearn
+
+from datetime import timedelta, datetime
+from mlflow.tracking import MlflowClient
+from pyspark.sql import functions as F, types as T
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+
+client = MlflowClient()
 
 # COMMAND ----------
 
@@ -85,54 +85,69 @@ config = get_recipe_config(root_path, profile)
 if config['experiment']['name'].startswith(f"/{env}-mlops-demo-aws-experiment"):
     print("WARNING: The experiment name may not have been set correctly. Please confirm that the experiment name in the profile YAML file matches the experiment_name variable in mlops_demo_aws/bundle.yml.")
 
-# COMMAND ----------
-
-r = Recipe(profile=profile)
+mlflow.set_experiment(config['experiment']['name'])
 
 # COMMAND ----------
 
-r.clean()
+# Read data and add a unique id column (not mandatory but preferred)
+raw_df = (spark.read.format("parquet")
+          .load("/databricks-datasets/learning-spark-v2/sf-airbnb/sf-airbnb-clean.parquet/")
+         )
+
+display(raw_df)
 
 # COMMAND ----------
 
-r.inspect()
+features_list = ["bedrooms", "neighbourhood_cleansed", "accommodates", "cancellation_policy", "beds", "host_is_superhost", "property_type", "minimum_nights", "bathrooms", "host_total_listings_count", "number_of_reviews", "review_scores_value", "review_scores_cleanliness"]
+
+
+LABEL_COL = "price" # Name of ground-truth labels column
+
+
+train_df, baseline_test_df, inference_df = raw_df.select(*features_list+[LABEL_COL]).randomSplit(weights=[0.6, 0.2, 0.2], seed=42)
 
 # COMMAND ----------
 
-r.run("ingest")
+# Define the training datasets
+X_train = train_df.drop(LABEL_COL).toPandas()
+Y_train = train_df.select(LABEL_COL).toPandas().values.ravel()
+
+# Define categorical preprocessor
+categorical_cols = [col for col in X_train if X_train[col].dtype == "object"]
+one_hot_pipeline = Pipeline(steps=[("one_hot_encoder", OneHotEncoder(handle_unknown="ignore"))])
+preprocessor = ColumnTransformer([("onehot", one_hot_pipeline, categorical_cols)], remainder="passthrough", sparse_threshold=0)
+
+# Define the model
+skrf_regressor = RandomForestRegressor(
+  bootstrap=True,
+  criterion="squared_error",
+  max_depth=5,
+  max_features=0.5,
+  min_samples_leaf=0.1,
+  min_samples_split=0.15,
+  n_estimators=36,
+  random_state=42,
+)
+
+model = Pipeline([
+    ("preprocessor", preprocessor),
+    ("regressor", skrf_regressor),
+])
+
+# Enable automatic logging of input samples, metrics, parameters, and models
+mlflow.sklearn.autolog(log_input_examples=True, silent=True)
+
+with mlflow.start_run(run_name="random_forest_regressor") as mlflow_run:
+    model.fit(X_train, Y_train)
 
 # COMMAND ----------
 
-r.run("split")
+# Register model to MLflow Model Registry
+run_id = mlflow_run.info.run_id
+model_version = mlflow.register_model(model_uri=f"runs:/{run_id}/model", name=config['model_registry']['model_name'])
 
 # COMMAND ----------
 
-r.run("transform")
-
-# COMMAND ----------
-
-r.run("train")
-
-# COMMAND ----------
-
-r.run("evaluate")
-
-# COMMAND ----------
-
-r.run("register")
-
-# COMMAND ----------
-
-r.inspect("train")
-
-# COMMAND ----------
-
-test_data = r.get_artifact("test_data")
-test_data.describe()
-
-# COMMAND ----------
-
-model_version = r.get_artifact("registered_model_version")
 model_uri = f"models:/{model_version.name}/{model_version.version}"
 dbutils.jobs.taskValues.set("model_uri", model_uri)
 dbutils.jobs.taskValues.set("model_name", model_version.name)
