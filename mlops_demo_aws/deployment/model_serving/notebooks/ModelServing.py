@@ -86,7 +86,10 @@ assert model_version != "", "model_version notebook parameter must be specified"
 
 # COMMAND ----------
 
-endpoint_interface = client.get_inference_endpoint(endpoint_name)
+env = "staging"
+model_name = "staging-mlops-demo-aws-model"
+model_version = "3"
+endpoint_name = f"{model_name}-endpoint"
 
 # COMMAND ----------
 
@@ -95,11 +98,9 @@ model_name = "staging-mlops-demo-aws-model"
 model_version = "3"
 endpoint_name = f"{model_name}-endpoint"
 
-dbfs_table_path = "/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables"
+dbfs_table_path = "dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables"
 
-data = {
-    "name": endpoint_name,
-    "config": {
+config = {
         "served_models": [
     {
         "model_name": model_name,
@@ -108,7 +109,10 @@ data = {
         "scale_to_zero_enabled": False,
     }
         ]
-    },
+    }
+data = {
+    "name": endpoint_name,
+    "config": config,
     "inference_table_config": {
         "dbfs_destination_path": dbfs_table_path
     }
@@ -116,10 +120,19 @@ data = {
 try:
     endpoint_interface = client.get_inference_endpoint(endpoint_name)
     print(f"Endpoint {endpoint_name} is being updated")
-    client.update_served_models(data)
-except:
+    client.update_served_models(endpoint_name, config)
+except Exception as ex:
+    print(ex)
     print(f"New endpoint {endpoint_name} is being created")
     client.create_inference_endpoint(data)
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+client.update_served_models(data)
 
 # COMMAND ----------
 
