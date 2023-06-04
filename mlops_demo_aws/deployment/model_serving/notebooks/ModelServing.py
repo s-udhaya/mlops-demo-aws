@@ -93,9 +93,9 @@ endpoint_name = f"{model_name}-endpoint"
 
 # COMMAND ----------
 
-env = "staging"
-model_name = "staging-mlops-demo-aws-model"
-model_version = "3"
+# env = "staging"
+# model_name = "staging-mlops-demo-aws-model"
+# model_version = "3"
 endpoint_name = f"{model_name}-endpoint"
 
 dbfs_table_path = "dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables"
