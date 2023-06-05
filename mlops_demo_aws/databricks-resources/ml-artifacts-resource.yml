@@ -27,8 +27,8 @@ environments:
             
             Links:
               * [Git Repo]($#{var.git_repo_url}): contains ML code for the current project.
-              * [Recurring model training job](https://e2-demo-field-eng.cloud.databricks.com#job/${resources.jobs.model_training_job.id}): trains fresh model versions using the latest ML code.
-              * [Recurring batch inference job](https://e2-demo-field-eng.cloud.databricks.com#job/${resources.jobs.batch_inference_job.id}): applies the latest ${bundle.environment} model version for batch inference.
+              * [Recurring model training job](https://e2-dogfood.staging.cloud.databricks.com#job/${resources.jobs.model_training_job.id}): trains fresh model versions using the latest ML code.
+              * [Recurring batch inference job](https://e2-dogfood.staging.cloud.databricks.com#job/${resources.jobs.batch_inference_job.id}): applies the latest ${bundle.environment} model version for batch inference.
 
 # Allow users to read the model and experiment
 permissions: &permissions

@@ -52,8 +52,8 @@ After merging your pull request, subsequent runs of the model training and batch
 jobs in staging and production will automatically use your updated ML code.
 
 You can track the state of the ML pipelines for the current project from the MLflow registered model UI. Links:
-* [Staging workspace registered model](https://e2-demo-field-eng.cloud.databricks.com#mlflow/models/staging-mlops-demo-aws-model)
-* [Prod workspace registered model](https://e2-demo-field-eng.cloud.databricks.com#mlflow/models/prod-mlops-demo-aws-model)
+* [Staging workspace registered model](https://e2-dogfood.staging.cloud.databricks.com#mlflow/models/staging-mlops-demo-aws-model)
+* [Prod workspace registered model](https://e2-dogfood.staging.cloud.databricks.com#mlflow/models/prod-mlops-demo-aws-model)
 
 In both the staging and prod workspaces, the MLflow registered model contains links to:
 * The model versions produced through automated retraining
