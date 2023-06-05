@@ -47,8 +47,8 @@ sys.path.append("../..")
 from client import EndpointClient
 
 # get API URL and token
-databricks_url = dbutils.secrets.get(scope = "tokens", key = "db_host_mlops")
-databricks_token = dbutils.secrets.get(scope = "tokens", key = "db_token_mlops")
+databricks_url = dbutils.secrets.get(scope = "udhay-mlops-demo", key = "db_host_mlops")
+databricks_token = dbutils.secrets.get(scope = "udhay-mlops-demo", key = "db_token_mlops")
 
 # COMMAND ----------
 
