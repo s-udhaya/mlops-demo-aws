@@ -53,7 +53,7 @@ notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.ge
 
 env = dbutils.widgets.get("env")
 experiment_name = dbutils.widgets.get("experiment_name")
-
+model_name = dbutils.widgets.get("model_name")
 
 # COMMAND ----------
 
@@ -131,7 +131,7 @@ with mlflow.start_run(run_name="random_forest_regressor") as mlflow_run:
 
 # Register model to MLflow Model Registry
 run_id = mlflow_run.info.run_id
-model_version = mlflow.register_model(model_uri=f"runs:/{run_id}/model", name=config['model_registry']['model_name'])
+model_version = mlflow.register_model(model_uri=f"runs:/{run_id}/model", name=model_name)
 
 # COMMAND ----------
 
