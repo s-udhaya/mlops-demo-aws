@@ -17,6 +17,7 @@ env:
 
 jobs:
   staging:
+    permissions: write-all
     concurrency: mlops-demo-aws-staging-bundle-job
     runs-on: ubuntu-20.04
     steps:
@@ -34,7 +35,7 @@ jobs:
         uses: actions/github-script@v6
         id: comment
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
           script: |
             const fs = require('fs');
             const fileContents = fs.readFileSync('validate_output.txt', 'utf8');
@@ -55,6 +56,7 @@ jobs:
             })
 
   prod:
+    permissions: write-all
     concurrency: mlops-demo-aws-prod-bundle-job
     runs-on: ubuntu-20.04
     steps:
@@ -72,7 +74,7 @@ jobs:
         uses: actions/github-script@v6
         id: comment
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
           script: |
             const fs = require('fs');
             const fileContents = fs.readFileSync('validate_output.txt', 'utf8');

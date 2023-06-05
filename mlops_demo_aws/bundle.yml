@@ -31,7 +31,7 @@ environments:
     default: true
     workspace:
       # TODO: add dev workspace URL
-      host:
+      host: https://e2-demo-field-eng.cloud.databricks.com
 
   staging:
     workspace:
