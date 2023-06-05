@@ -91,7 +91,7 @@ assert model_version != "", "model_version notebook parameter must be specified"
 # model_version = "3"
 endpoint_name = f"{model_name}-endpoint"
 
-dbfs_table_path = "dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables"
+dbfs_table_path = "dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables_airbnb"
 
 config = {
         "served_models": [
