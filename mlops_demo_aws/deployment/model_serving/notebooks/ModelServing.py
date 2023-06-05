@@ -119,29 +119,6 @@ except Exception as ex:
     print(f"New endpoint {endpoint_name} is being created")
     client.create_inference_endpoint(data)
 
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-client.update_served_models(data)
-
-# COMMAND ----------
-
-# env = "staging"
-# model_name = "staging-mlops-demo-aws-model"
-# model_version = "3"
-endpoint_name = f"{model_name}_version_{model_version}"
-models = [
-    {
-        "model_name": model_name,
-        "model_version": model_version,
-        "workload_size": "Small",
-        "scale_to_zero_enabled": False,
-    }
-]
-client.create_inference_endpoint(endpoint_name, models)
 
 # COMMAND ----------
 
