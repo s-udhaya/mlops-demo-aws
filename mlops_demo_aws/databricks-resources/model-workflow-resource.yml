@@ -33,6 +33,7 @@ resources:
             notebook_path: ../training/notebooks/Train.py
             base_parameters:
               env: ${bundle.environment}
+              experiment_name: ${var.experiment_name}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ModelValidation
