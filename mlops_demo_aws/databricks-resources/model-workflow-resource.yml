@@ -10,7 +10,7 @@ model_workflow_cluster: &model_workflow_cluster
   new_cluster:
     num_workers: 1
     spark_version: 13.0.x-cpu-ml-scala2.12
-    instance_pool_id: '0603-175909-lent44-pool-5losrriq'
+    instance_pool_id: '0605-090612-polo106-pool-l0jj3imi'
     custom_tags:
       clusterSource: mlops-stack/0.1
 
