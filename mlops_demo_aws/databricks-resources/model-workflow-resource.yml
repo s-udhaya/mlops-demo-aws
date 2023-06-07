@@ -44,6 +44,7 @@ resources:
             - task_key: Train
           notebook_task:
             notebook_path: mlops_demo_aws/validation/notebooks/ModelValidation.py
+            source: git
             base_parameters:
               env: ${bundle.environment}
               experiment_name: ${var.experiment_name}
@@ -81,6 +82,7 @@ resources:
             - task_key: ModelValidation
           notebook_task:
             notebook_path: mlops_demo_aws/deployment/model_deployment/notebooks/ModelDeployment.py
+            source: git
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
@@ -91,6 +93,7 @@ resources:
             - task_key: ModelDeployment
           notebook_task:
             notebook_path: mlops_demo_aws/deployment/model_serving/notebooks/ModelServing.py
+            source: git
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
