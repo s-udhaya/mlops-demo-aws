@@ -21,10 +21,16 @@ resources:
           <<: *new_cluster
           notebook_task:
             notebook_path: ../deployment/model_monitoring/notebooks/ModelMonitoring.py
+            source: git
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+      git_source:
+        git_provider: "gitHub"
+        git_url: "https://github.com/s-udhaya/mlops-demo-aws.git"
+        git_commit: ${bundle.git.commit}
 
       schedule:
         quartz_cron_expression: "0 0 11 * * ?" # daily at 11am
