@@ -43,7 +43,7 @@ resources:
           depends_on:
             - task_key: Train
           notebook_task:
-            notebook_path: ../validation/notebooks/ModelValidation.py
+            notebook_path: mlops_demo_aws/validation/notebooks/ModelValidation.py
             base_parameters:
               env: ${bundle.environment}
               experiment_name: ${var.experiment_name}
@@ -80,7 +80,7 @@ resources:
           depends_on:
             - task_key: ModelValidation
           notebook_task:
-            notebook_path: ../deployment/model_deployment/notebooks/ModelDeployment.py
+            notebook_path: mlops_demo_aws/deployment/model_deployment/notebooks/ModelDeployment.py
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
@@ -90,7 +90,7 @@ resources:
           depends_on:
             - task_key: ModelDeployment
           notebook_task:
-            notebook_path: ../deployment/model_serving/notebooks/ModelServing.py
+            notebook_path: mlops_demo_aws/deployment/model_serving/notebooks/ModelServing.py
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
