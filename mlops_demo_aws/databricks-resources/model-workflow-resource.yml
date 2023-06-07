@@ -30,7 +30,7 @@ resources:
         - task_key: Train
           job_cluster_key: model_training_job_cluster
           notebook_task:
-            notebook_path: mlops_demo_aws/training/notebooks/Train.py
+            notebook_path: mlops_demo_aws/training/notebooks/Train
             source: git
             base_parameters:
               env: ${bundle.environment}
@@ -43,7 +43,7 @@ resources:
           depends_on:
             - task_key: Train
           notebook_task:
-            notebook_path: mlops_demo_aws/validation/notebooks/ModelValidation.py
+            notebook_path: mlops_demo_aws/validation/notebooks/ModelValidation
             source: git
             base_parameters:
               env: ${bundle.environment}
@@ -81,7 +81,7 @@ resources:
           depends_on:
             - task_key: ModelValidation
           notebook_task:
-            notebook_path: mlops_demo_aws/deployment/model_deployment/notebooks/ModelDeployment.py
+            notebook_path: mlops_demo_aws/deployment/model_deployment/notebooks/ModelDeployment
             source: git
             base_parameters:
               env: ${bundle.environment}
@@ -92,7 +92,7 @@ resources:
           depends_on:
             - task_key: ModelDeployment
           notebook_task:
-            notebook_path: mlops_demo_aws/deployment/model_serving/notebooks/ModelServing.py
+            notebook_path: mlops_demo_aws/deployment/model_serving/notebooks/ModelServing
             source: git
             base_parameters:
               env: ${bundle.environment}

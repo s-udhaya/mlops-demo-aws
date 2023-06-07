@@ -20,7 +20,7 @@ resources:
         - task_key: model_monitoring_job
           <<: *new_cluster
           notebook_task:
-            notebook_path: mlops_demo_aws/deployment/model_monitoring/notebooks/ModelMonitoring.py
+            notebook_path: mlops_demo_aws/deployment/model_monitoring/notebooks/ModelMonitoring
             source: git
             base_parameters:
               env: ${bundle.environment}
