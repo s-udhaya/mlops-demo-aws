@@ -6,7 +6,6 @@ variables:
     description: Model name for the model training.
     default: ${bundle.environment}-mlops-demo-aws-model
 
-
 bundle:
   name: mlops-demo-aws
 

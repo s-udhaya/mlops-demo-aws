@@ -30,7 +30,7 @@ resources:
         - task_key: Train
           job_cluster_key: model_training_job_cluster
           notebook_task:
-            notebook_path: ../training/notebooks/Train.py
+            notebook_path: ../../mlops_demo_aws/training/notebooks/Train.py
             source: git
             base_parameters:
               env: ${bundle.environment}
@@ -97,8 +97,7 @@ resources:
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       git_source:
         git_provider: "gitHub"
-        git_url: ${bundle.git.origin_url}
-        git_branch: ${bundle.git.branch}
+        git_url: "https://github.com/s-udhaya/mlops-demo-aws.git"
         git_commit: ${bundle.git.commit}
 
       schedule:
