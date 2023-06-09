@@ -1,3 +1,8 @@
+import sys
+import pathlib
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
+
 import gevent.monkey
 
 from mlops_demo_aws.deployment.model_serving.endpoint_performance import test_endpoint_locust
