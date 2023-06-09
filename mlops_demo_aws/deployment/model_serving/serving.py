@@ -3,8 +3,8 @@ import pathlib
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
-import gevent.monkey
-gevent.monkey.patch_all()
+# import gevent.monkey
+# gevent.monkey.patch_all()
 
 import json
 import logging
