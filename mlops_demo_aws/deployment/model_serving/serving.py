@@ -4,10 +4,6 @@ import pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
 import gevent.monkey
-
-from mlops_demo_aws.deployment.model_serving.endpoint_performance import test_endpoint_locust
-from mlops_demo_aws.utils import get_model_name, get_deployed_model_stage_for_env
-
 gevent.monkey.patch_all()
 
 import json
@@ -29,6 +25,9 @@ import requests
 from requests.exceptions import HTTPError
 import yaml
 
+from mlops_demo_aws.deployment.model_serving.endpoint_performance import test_endpoint_locust
+from mlops_demo_aws.utils import get_model_name, get_deployed_model_stage_for_env
+
 PRODUCTION_DEPLOYMENT = "production_deployment"
 INTEGRATION_TEST = "integration_test"
 
@@ -41,7 +40,7 @@ def create_spark_session():
 
 
 def prepare_scoring_data() -> pd.DataFrame:
-    input_path = pathlib.Path.cwd() / "model_serving_mlops" / "training" / "data" / "sample.parquet"
+    input_path = pathlib.Path.cwd().parents[1] / "training" / "data" / "sample.parquet"
     input_pdf = pd.read_parquet(str(input_path.absolute()))
     return input_pdf.drop(columns=["fare_amount"])
 
