@@ -69,7 +69,7 @@ assert model_version != "", "model_version notebook parameter must be specified"
 
 
 # COMMAND ----------
-from mlops_demo_aws.deployment.model_serving.model_serving import perform_integration_test, perform_prod_deployment
+from mlops_demo_aws.deployment.model_serving.serving import perform_integration_test, perform_prod_deployment
 from mlops_demo_aws.utils import get_deployed_model_stage_for_env, get_model_name
 
 model_name = get_model_name(env)
