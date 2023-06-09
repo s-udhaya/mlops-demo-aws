@@ -248,8 +248,10 @@ def perform_prod_deployment(
     existing_endpt_conf = get_model_endpoint_config(api_client, endpoint_name)
     model_version = get_model_version_for_stage(model_name, stage)
     if existing_endpt_conf:
+        print(f"Updating existing endpoint : {endpoint_name}")
         deploy_new_version_to_existing_endpoint(api_client, endpoint_name, model_name, model_version)
     else:
+        print(f"creating new endpoint : {endpoint_name}")
         create_serving_endpoint(api_client, endpoint_name, model_name, model_version)
     time.sleep(100)
     if wait_for_endpoint_to_become_ready(api_client, endpoint_name):
