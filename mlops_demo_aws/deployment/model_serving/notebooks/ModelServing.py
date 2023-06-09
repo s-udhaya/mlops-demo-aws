@@ -29,7 +29,8 @@
 # Provide them via DB widgets or notebook arguments.
 #
 # Name of the current environment
-dbutils.widgets.dropdown("env", "None", ["None", "staging", "prod"], "Environment Name")
+
+dbutils.widgets.dropdown("env", "None", ["None", "test", "staging", "prod"], "Environment Name")
 # Test mode
 dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
 
@@ -60,26 +61,28 @@ sys.path.append("..")
 env = dbutils.widgets.get("env")
 _test_mode = dbutils.widgets.get("test_mode")
 test_mode = True if _test_mode.lower() == "true" else False
-model_name = dbutils.jobs.taskValues.get("Train", "model_name", debugValue="")
-model_version = dbutils.jobs.taskValues.get("Train", "model_version", debugValue="")
+model_name = dbutils.jobs.taskValues.get("Train", "model_name", debugValue="test-mlops-demo-aws-model")
+model_version = dbutils.jobs.taskValues.get("Train", "model_version", debugValue="1")
 assert env != "None", "env notebook parameter must be specified"
 assert model_name != "", "model_name notebook parameter must be specified"
 assert model_version != "", "model_version notebook parameter must be specified"
 
 
 # COMMAND ----------
-# from model_serving_mlops.deployment.model_deployment.model_serving import (
-#     deploy_model_serving_endpoint,
-#     perform_integration_test,
-# )
-#
-# if test_mode:
-#     endpoint_name = f"{model_name}-integration-test-endpoint"
-#     perform_integration_test(endpoint_name, model_name, model_version, p95_threshold=1000, qps_threshold=1)
-#
-# elif not test_mode:
-#     endpoint_name = f"{model_name}-v{model_version}"
-#     deploy_model_serving_endpoint(endpoint_name, model_name, model_version)
+from mlops_demo_aws.deployment.model_serving.model_serving import perform_integration_test, perform_prod_deployment
+from mlops_demo_aws.utils import get_deployed_model_stage_for_env, get_model_name
+
+model_name = get_model_name(env)
+endpoint_name = f"{model_name}-{env}"
+strage = get_deployed_model_stage_for_env(env)
+
+if test_mode:
+    endpoint_name = f"{model_name}-integration-test-endpoint"
+    perform_integration_test(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+
+elif not test_mode:
+    endpoint_name = f"{model_name}-v{model_version}"
+    perform_prod_deployment(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
 
 
 

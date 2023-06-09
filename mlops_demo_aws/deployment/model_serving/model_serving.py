@@ -1,5 +1,8 @@
 import gevent.monkey
 
+from mlops_demo_aws.deployment.model_serving.endpoint_performance import test_endpoint_locust
+from mlops_demo_aws.utils import get_model_name, get_deployed_model_stage_for_env
+
 gevent.monkey.patch_all()
 
 import json
@@ -14,8 +17,6 @@ from databricks_cli.configure.config import _get_api_client
 from databricks_cli.configure.provider import EnvironmentVariableConfigProvider
 from databricks_cli.sdk import ApiClient
 from mlflow.client import MlflowClient
-from model_serving_mlops.deployment.model_deployment.endpoint_performance import test_endpoint_locust
-from model_serving_mlops.utils import get_deployed_model_stage_for_env, get_model_name
 import numpy as np
 import pandas as pd
 from pyspark.sql import SparkSession
