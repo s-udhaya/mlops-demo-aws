@@ -42,7 +42,7 @@ def create_spark_session():
 def prepare_scoring_data() -> pd.DataFrame:
     input_path = pathlib.Path.cwd().parents[1] / "training" / "data" / "sample.parquet"
     input_pdf = pd.read_parquet(str(input_path.absolute()))
-    return input_pdf.drop(columns=["fare_amount"])
+    return input_pdf.drop(columns=["price"])
 
 
 def get_model_version_for_stage(model_name: str, stage: str) -> str:
