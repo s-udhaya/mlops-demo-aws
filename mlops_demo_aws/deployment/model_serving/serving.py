@@ -204,7 +204,8 @@ def get_model_endpoint_config(api_client: ApiClient, endpoint_name: str) -> dict
     try:
         res = api_client.perform_query("GET", f"/serving-endpoints/{endpoint_name}")
         return res
-    except HTTPError:
+    except HTTPError as err:
+        print(err)
         return None
 
 
