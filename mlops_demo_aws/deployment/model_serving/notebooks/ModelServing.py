@@ -128,7 +128,7 @@ while r.json()["jobs"][0]["conclusion"] is None:
     time.sleep(sleep_interval)
     r = requests.get(get_job_url,
                      headers={"Authorization": authorization})
-    print("job is not finished, waiting for {sleep_interval} more seconds")
+    print(f"job is not finished, waiting for {sleep_interval} more seconds")
 
 if r.json()["jobs"][0]["conclusion"] != "success":
     raise ("Model serving is failed")
