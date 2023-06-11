@@ -10,7 +10,7 @@ cd "$(mktemp -d)"
 
 echo "unzipping databricks cli"
 # Unzip release archive.
-unzip -q -o "scripts/databricks_cli_linux_amd64.zip"
+unzip -q -o "../scripts/databricks_cli_linux_amd64.zip"
 
 echo "adding databricks to path"
 # Add databricks to path.
