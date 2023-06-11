@@ -42,7 +42,7 @@ jobs:
             pip install databricks-cli
       - name: set pythonpath
         run: |
-            echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+            echo "PYTHONPATH="$(pwd)"" >> $GITHUB_ENV
       - name: Deploy Databricks Model Serving endpoint
         env:
           MLFLOW_TRACKING_URI: databricks
