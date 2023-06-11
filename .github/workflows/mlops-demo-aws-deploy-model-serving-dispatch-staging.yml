@@ -31,16 +31,14 @@ env:
 
 jobs:
   id:
-    name: Workflow ID Provider
-    runs-on: ubuntu-latest
-    steps:
-      - name: ${{github.event.inputs.id}}
-        run: echo run identifier ${{ inputs.id }}
-  staging:
+    name: staging
     runs-on: ubuntu-latest
     environment: staging
 
     steps:
+      - name: ${{github.event.inputs.id}}
+        run: echo run identifier ${{ inputs.id }}
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
