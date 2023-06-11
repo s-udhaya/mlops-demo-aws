@@ -2,6 +2,8 @@
 
 set -e
 
+TARGET="/usr/local/bin"
+
 echo "creating temp directory"
 # Change into temporary directory.
 tmp_dir="$(mktemp -d)"
