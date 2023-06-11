@@ -64,8 +64,8 @@ jobs:
             echo "Setting up Databricks Model Serving Endpoint with staging model..."
             python mlops_demo_aws/deployment/model_serving/serving.py \
             --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml \
-            --model-name "${{ github.event.inputs.modelName }}" 
-            --model-version "${{ github.event.inputs.modelVersion }}" 
-            --env "${{ github.event.inputs.workspaceEnv }}" 
+            --model-name "${{ github.event.inputs.modelName }}"  \
+            --model-version "${{ github.event.inputs.modelVersion }}"  \
+            --env "${{ github.event.inputs.workspaceEnv }}"  \
             --mode "${{ github.event.inputs.deploymentMode }}"
             echo "Success!"
