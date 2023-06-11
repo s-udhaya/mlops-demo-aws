@@ -14,15 +14,20 @@ on:
       modeName:
         type: string
         required: true
+        description: 'URI of model to deploy, in the format models:/<model-name>/<version-id>'
       modelVersion:
         type: string
         required: true
+        description: 'URI of model to deploy, in the format models:/<model-name>/<version-id>'
       workspaceEnv:
         type: string
         required: true
+        description: 'URI of model to deploy, in the format models:/<model-name>/<version-id>'
       deploymentMode:
         type: string
         required: true
+        description: 'URI of model to deploy, in the format models:/<model-name>/<version-id>'
+
 env:
   DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
   DATABRICKS_TOKEN: ${{ secrets.STAGING_WORKSPACE_TOKEN }}
