@@ -289,7 +289,7 @@ def perform_prod_deployment(
     type=click.STRING,
 )
 
-def main(mode: str, env: str, config: str, model_name: str, model_version: str):
+def main(mode: str, config: str, model_name: str, model_version: str):
     endpoint_name = f"{model_name}-endpoint"
     with open(config, "r") as file:
         config_dict = yaml.safe_load(file)
