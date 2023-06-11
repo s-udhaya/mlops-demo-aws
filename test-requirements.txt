@@ -1,2 +1,8 @@
+-r requirements.txt
 pytest>=7.1.2
-pandas==1.5.3
+pytest-cov>=4.0.0
+pre-commit>=2.21.0
+toml>=0.10.2
+mlflow==2.3.0
+locust==2.14.2
+gevent>=22.10.2
