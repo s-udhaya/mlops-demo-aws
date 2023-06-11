@@ -27,7 +27,8 @@ jobs:
       - name: install databricks bundle
         run: |
           ls
-          chmod +x ../scripts/install.sh
+          sudo chmod +x ../scripts/install.sh
+          echo "permission modified"
           sudo ../scripts/install.sh
         shell: bash
       - name: Validate Bundle For Staging Environment
