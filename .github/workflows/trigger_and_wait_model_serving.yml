@@ -29,4 +29,4 @@ jobs:
           ref: main #branch name of target repo
           propagate_failure: true
           #client payload -> input parameters for target workflow
-          client_payload: '{"model_name": "${{ github.event.inputs.modelName }}", "model_version": "${{ github.event.inputs.modelVersion }}", "deployment_mode": "${{ github.event.inputs.deploymentMode }}"}'
+          client_payload: '{"modelName": "${{ github.event.inputs.modelName }}", "modelVersion": "${{ github.event.inputs.modelVersion }}", "deploymentMode": "${{ github.event.inputs.deploymentMode }}"}'
