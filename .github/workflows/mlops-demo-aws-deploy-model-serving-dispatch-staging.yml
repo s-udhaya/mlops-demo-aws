@@ -11,10 +11,15 @@ name: Model serving deployment staging
 on:
   workflow_dispatch:
     inputs:
-      client_payload:
-        description: 'client-payload'
+      modelName:
+        type: string
         required: true
-
+      modelVersion:
+        type: string
+        required: true
+      deploymentMode:
+        type: string
+        required: true
 
 env:
   DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
@@ -51,7 +56,7 @@ jobs:
             echo "Setting up Databricks Model Serving Endpoint with staging model..."
             python mlops_demo_aws/deployment/model_serving/serving.py \
             --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml \
-            --model-name "${{ github.event.inputs.client_payload }}["model_name"]"  \
-            --model-version "${{ github.event.inputs.client_payload }}["model_version"]"  \
-            --mode "${{ github.event.inputs.client_payload }}["deployment_mode"]"
+            --model-name "${{ github.event.inputs.modelName }}"  \
+            --model-version "${{ github.event.inputs.modelVersion }}"  \
+            --mode "${{ github.event.inputs.deploymentMode }}"
             echo "Success!"
