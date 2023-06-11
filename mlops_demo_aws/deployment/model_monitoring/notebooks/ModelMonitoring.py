@@ -59,10 +59,13 @@ from pyspark.sql import functions as F, types as T
 """
 Required parameters in order to run this notebook.
 """
-ENDPOINT_NAME = "test-mlops-demo-aws-model-endpoint"  # Name of the serving endpoint
+env = dbutils.widgets.get("env")
+model_name = dbutils.widgets.get("model_name")
+
+ENDPOINT_NAME = f"{model_name}-endpoint"  # Name of the serving endpoint
 PROBLEM_TYPE = "regression"  # ML problem type, one of "classification"/"regression"
 CATALOG_NAME = "udhay_demo"  # Name of the catalog to use
-OUTPUT_SCHEMA_NAME = "monitoring"  # Name of the output database to store tables in
+OUTPUT_SCHEMA_NAME = f"{env}-monitoring"  # Name of the output database to store tables in
 
 # Validate that all required inputs have been provided
 if None in [ENDPOINT_NAME, PROBLEM_TYPE, CATALOG_NAME, OUTPUT_SCHEMA_NAME]:
