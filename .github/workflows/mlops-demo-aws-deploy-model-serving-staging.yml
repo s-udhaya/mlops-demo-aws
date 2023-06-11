@@ -40,10 +40,14 @@ jobs:
             python -m pip install --upgrade pip
             pip install -r test-requirements.txt
             pip install databricks-cli
-
+      - name: set pythonpath
+        run: |
+            echo $pwd
+            echo "PYTHONPATH=$pwd" >> $GITHUB_ENV
       - name: Deploy Databricks Model Serving endpoint
         env:
           MLFLOW_TRACKING_URI: databricks
+        
         run: |
             echo "Setting up Databricks Model Serving Endpoint with staging model..."
             python mlops_demo_aws/deployment/model_serving/serving.py --config mlops_demo_aws/deployment/model_serving/model_deployment_config.yml --env staging --mode production_deployment
