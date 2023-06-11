@@ -285,6 +285,9 @@ def perform_prod_deployment(
 
 def main(mode: str, config: str, model_name: str, model_version: str):
     endpoint_name = f"{model_name}-endpoint"
+    print(f"model name: {model_name}")
+    print(f"model version: {model_version}")
+    print(f"model endpoint: {endpoint_name}")
     with open(config, "r") as file:
         config_dict = yaml.safe_load(file)
     if mode == INTEGRATION_TEST:
