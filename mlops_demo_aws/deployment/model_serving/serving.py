@@ -4,6 +4,7 @@ import pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 import json
@@ -85,9 +86,9 @@ def create_serving_endpoint(api_client: ApiClient, endpoint_name: str, model_nam
             ],
             "traffic_config": {"routes": [{"served_model_name": model_name, "traffic_percentage": 100}]},
         },
-    "inference_table_config": {
-        "dbfs_destination_path": dbfs_table_path
-    }
+        "inference_table_config": {
+            "dbfs_destination_path": dbfs_table_path
+        }
     }
     return api_client.perform_query("POST", "/preview/serving-endpoints", data=req)
 
@@ -110,7 +111,7 @@ def check_if_endpoint_is_ready(api_client: ApiClient, endpoint_name: str):
 
 
 def wait_for_endpoint_to_become_ready(
-    api_client: ApiClient, endpoint_name: str, timeout: int = 360, step: int = 20
+        api_client: ApiClient, endpoint_name: str, timeout: int = 360, step: int = 20
 ) -> bool:
     waited = 0
     while not check_if_endpoint_is_ready(api_client, endpoint_name):
@@ -144,10 +145,10 @@ def query_endpoint(endpoint_name: str, df: pd.DataFrame) -> tuple[Any, int]:
 
 
 def test_endpoint(
-    endpoint_name: str,
-    latency_threshold: int,
-    qps_threshold: int,
-    test_data_df: pd.DataFrame,
+        endpoint_name: str,
+        latency_threshold: int,
+        qps_threshold: int,
+        test_data_df: pd.DataFrame,
 ):
     durations = []
     for _ in range(500):
@@ -186,8 +187,10 @@ def get_max_version_for_model(api_client: ApiClient, endpoint_name: str, model_n
 
 
 def deploy_new_version_to_existing_endpoint(
-    api_client: ApiClient, endpoint_name: str, model_name: str, model_version: str
+        api_client: ApiClient, endpoint_name: str, model_name: str, model_version: str
 ):
+    dbfs_table_path = f"dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/{model_name}"
+
     update_endpoint_req = {
         "served_models": [
             {
@@ -199,8 +202,12 @@ def deploy_new_version_to_existing_endpoint(
             }
         ],
         "traffic_config": {"routes": [{"served_model_name": model_name, "traffic_percentage": 100}]},
+        "inference_table_config": {
+            "dbfs_destination_path": dbfs_table_path
+        }
     }
-    res = api_client.perform_query("PUT", f"/preview/serving-endpoints/{endpoint_name}/config", data=update_endpoint_req)
+    res = api_client.perform_query("PUT", f"/preview/serving-endpoints/{endpoint_name}/config",
+                                   data=update_endpoint_req)
     print(res)
 
 
@@ -227,7 +234,7 @@ def get_model_endpoint_config(api_client: ApiClient, endpoint_name: str) -> dict
 
 
 def perform_integration_test(
-    endpoint_name: str, model_name: str, model_version: str, latency_p95_threshold: int, qps_threshold: int
+        endpoint_name: str, model_name: str, model_version: str, latency_p95_threshold: int, qps_threshold: int
 ):
     logger.info("Getting api_client...")
     api_client = get_api_clent()
@@ -244,7 +251,7 @@ def perform_integration_test(
 
 
 def perform_prod_deployment(
-    endpoint_name: str, model_name: str, model_version: str, latency_p95_threshold: int, qps_threshold: int
+        endpoint_name: str, model_name: str, model_version: str, latency_p95_threshold: int, qps_threshold: int
 ):
     api_client = get_api_clent()
     df = prepare_scoring_data()[:10]
@@ -286,7 +293,6 @@ def perform_prod_deployment(
     required=True,
     type=click.STRING,
 )
-
 def main(mode: str, config: str, model_name: str, model_version: str):
     endpoint_name = f"{model_name}-endpoint"
     print(f"model name: {model_name}")
