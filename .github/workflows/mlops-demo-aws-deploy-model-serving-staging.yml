@@ -50,5 +50,5 @@ jobs:
         
         run: |
             echo "Setting up Databricks Model Serving Endpoint with staging model..."
-            python mlops_demo_aws/deployment/model_serving/serving.py --config mlops_demo_aws/deployment/model_serving/model_deployment_config.yml --env staging --mode production_deployment
+            python mlops_demo_aws/deployment/model_serving/serving.py --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml --env staging --mode production_deployment
             echo "Success!"
