@@ -11,9 +11,17 @@ name: Staging Model Deployment
 on:
   workflow_dispatch:
     inputs:
-      modelUri:
+      modeName:
         type: string
-        description: 'URI of model to deploy, in the format models:/<model-name>/<version-id>'
+        required: true
+      modelVersion:
+        type: string
+        required: true
+      workspaceEnv:
+        type: string
+        required: true
+      deploymentMode:
+        type: string
         required: true
 
 env:
@@ -42,13 +50,17 @@ jobs:
             pip install databricks-cli
       - name: set pythonpath
         run: |
-            pwd
-            echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+            echo "PYTHONPATH=$(pwd)" >> "$GITHUB_ENV"
       - name: Deploy Databricks Model Serving endpoint
         env:
           MLFLOW_TRACKING_URI: databricks
         
         run: |
             echo "Setting up Databricks Model Serving Endpoint with staging model..."
-            python mlops_demo_aws/deployment/model_serving/serving.py --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml --env staging --mode production_deployment
+            python mlops_demo_aws/deployment/model_serving/serving.py \
+            --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml \
+            --model-name "${{ github.event.inputs.modelName }}"  \
+            --model-version "${{ github.event.inputs.modelVersion }}"  \
+            --env "${{ github.event.inputs.workspaceEnv }}"  \
+            --mode "${{ github.event.inputs.deploymentMode }}"
             echo "Success!"

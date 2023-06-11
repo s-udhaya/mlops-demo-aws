@@ -223,11 +223,10 @@ def get_model_endpoint_config(api_client: ApiClient, endpoint_name: str) -> dict
 
 
 def perform_integration_test(
-    endpoint_name: str, model_name: str, stage: str, latency_p95_threshold: int, qps_threshold: int
+    endpoint_name: str, model_name: str, model_version: str, latency_p95_threshold: int, qps_threshold: int
 ):
     logger.info("Getting api_client...")
     api_client = get_api_clent()
-    model_version = get_model_version_for_stage(model_name, stage)
     test_data_df = prepare_scoring_data()[:10]
     delete_endpoint(api_client, endpoint_name)
     create_serving_endpoint(api_client, endpoint_name, model_name, model_version)
@@ -241,12 +240,11 @@ def perform_integration_test(
 
 
 def perform_prod_deployment(
-    endpoint_name: str, model_name: str, stage: str, latency_p95_threshold: int, qps_threshold: int
+    endpoint_name: str, model_name: str, model_version: str, latency_p95_threshold: int, qps_threshold: int
 ):
     api_client = get_api_clent()
     df = prepare_scoring_data()[:10]
     existing_endpt_conf = get_model_endpoint_config(api_client, endpoint_name)
-    model_version = get_model_version_for_stage(model_name, stage)
     if existing_endpt_conf:
         print(f"Updating existing endpoint : {endpoint_name}")
         deploy_new_version_to_existing_endpoint(api_client, endpoint_name, model_name, model_version)
@@ -280,19 +278,26 @@ def perform_prod_deployment(
     type=click.STRING,
     help="""Path to the configuration file.""",
 )
-def main(mode: str, env: str, config: str):
-    model_name = "test-mlops-demo-aws-model"
-    print(mlflow_client.get_latest_versions(model_name))
-    #get_model_name(env)
-    endpoint_name = f"{model_name}-{env}"
-    strage = get_deployed_model_stage_for_env(env)
+@click.option(
+    "--model-name",
+    required=True,
+    type=click.STRING,
+)
+@click.option(
+    "--model-version",
+    required=True,
+    type=click.STRING,
+)
+
+def main(mode: str, config: str, model_name: str, model_version: str):
+    endpoint_name = f"{model_name}-endpoint"
     with open(config, "r") as file:
         config_dict = yaml.safe_load(file)
     if mode == INTEGRATION_TEST:
         perform_integration_test(
             endpoint_name,
             model_name,
-            strage,
+            model_version,
             config_dict.get("latency_p95_threshold", 1000),
             config_dict.get("qps_threshold", 1),
         )
@@ -300,7 +305,7 @@ def main(mode: str, env: str, config: str):
         perform_prod_deployment(
             endpoint_name,
             model_name,
-            strage,
+            model_version,
             config_dict.get("latency_p95_threshold", 1000),
             config_dict.get("qps_threshold", 1),
         )
