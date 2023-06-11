@@ -3,8 +3,8 @@ import pathlib
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
-# import gevent.monkey
-# gevent.monkey.patch_all()
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import json
 import logging
@@ -40,13 +40,13 @@ def create_spark_session():
 
 
 def prepare_scoring_data() -> pd.DataFrame:
-    input_path = pathlib.Path.cwd().parents[1] / "training" / "data" / "sample.parquet"
+    input_path = pathlib.Path.cwd() / "mlops_demo_aws" / "training" / "data" / "sample.parquet"
     input_pdf = pd.read_parquet(str(input_path.absolute()))
     return input_pdf.drop(columns=["price"])
 
 
 def get_model_version_for_stage(model_name: str, stage: str) -> str:
-    versions = mlflow_client.get_latest_versions(model_name, stages=[stage])
+    versions = mlflow_client.get_latest_versions(model_name)
     return str(max([int(v.version) for v in versions]))
 
 
@@ -281,7 +281,9 @@ def perform_prod_deployment(
     help="""Path to the configuration file.""",
 )
 def main(mode: str, env: str, config: str):
-    model_name = get_model_name(env)
+    model_name = "test-mlops-demo-aws-model"
+    print(mlflow_client.get_latest_versions(model_name))
+    #get_model_name(env)
     endpoint_name = f"{model_name}-{env}"
     strage = get_deployed_model_stage_for_env(env)
     with open(config, "r") as file:

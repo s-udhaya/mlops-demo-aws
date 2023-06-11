@@ -1,0 +1,2 @@
+latency_p95_threshold: 1000
+qps_threshold: 1
