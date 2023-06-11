@@ -42,7 +42,6 @@ jobs:
             pip install databricks-cli
       - name: set pythonpath
         run: |
-            pwd
             echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
       - name: Deploy Databricks Model Serving endpoint
         env:
