@@ -26,6 +26,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: install databricks bundle
         run: |
+          ls
           chmod +x ./scripts/install.sh
           ./scripts/install.sh
         shell: bash
