@@ -29,145 +29,60 @@
 # Provide them via DB widgets or notebook arguments.
 #
 # Name of the current environment
-dbutils.widgets.dropdown("env", "None", ["None", "staging", "prod"], "Environment Name")
+
+dbutils.widgets.dropdown("env", "None", ["None", "test", "staging", "prod"], "Environment Name")
 # Test mode
 dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
 
-# COMMAND ----------
-
-import os
-import sys
-notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-%cd $notebook_path
-%cd ..
-sys.path.append("../..")
 
 # COMMAND ----------
 
-from client import EndpointClient
+# import os
+# import sys
+# notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+# %cd $notebook_path
+# %cd ..
+# sys.path.append("../..")
+
+# COMMAND ----------
+
 
 # get API URL and token
-databricks_url = dbutils.secrets.get(scope = "tokens", key = "db_host_mlops")
-databricks_token = dbutils.secrets.get(scope = "tokens", key = "db_token_mlops")
+databricks_url = dbutils.secrets.get(scope = "udhay-mlops-demo", key = "db_host_mlops")
+databricks_token = dbutils.secrets.get(scope = "udhay-mlops-demo", key = "db_token_mlops")
+
 
 # COMMAND ----------
+import sys
 
-client = EndpointClient(databricks_url, databricks_token)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## List existing endpoints
+sys.path.append("..")
 
 # COMMAND ----------
-
-client.list_inference_endpoints()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ## Create an endpoint with your model
-# MAGIC
-# MAGIC In the endpoint object returned by the create call, we can see that our endpoint’s update state is `IN_PROGRESS` and our served model is in a `CREATING` state. The `pending_config` field shows the details of the update in progress.
-
-# COMMAND ----------
-
 env = dbutils.widgets.get("env")
 _test_mode = dbutils.widgets.get("test_mode")
 test_mode = True if _test_mode.lower() == "true" else False
-model_name = dbutils.jobs.taskValues.get("Train", "model_name", debugValue="")
-model_version = dbutils.jobs.taskValues.get("Train", "model_version", debugValue="")
-print(f"model name: {model_name}")
-print(f"model version: {model_version}")
+model_name = dbutils.jobs.taskValues.get("Train", "model_name", debugValue="test-mlops-demo-aws-model")
+model_version = dbutils.jobs.taskValues.get("Train", "model_version", debugValue="1")
 assert env != "None", "env notebook parameter must be specified"
 assert model_name != "", "model_name notebook parameter must be specified"
 assert model_version != "", "model_version notebook parameter must be specified"
 
-# COMMAND ----------
-
-# env = "staging"
-# model_name = "staging-mlops-demo-aws-model"
-# model_version = "3"
-endpoint_name = f"{model_name}-endpoint"
-
-dbfs_table_path = "dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/inference_tables"
-
-config = {
-        "served_models": [
-    {
-        "model_name": model_name,
-        "model_version": model_version,
-        "workload_size": "Small",
-        "scale_to_zero_enabled": False,
-    }
-        ]
-    }
-data = {
-    "name": endpoint_name,
-    "config": config,
-    "inference_table_config": {
-        "dbfs_destination_path": dbfs_table_path
-    }
-}
-try:
-    endpoint_interface = client.get_inference_endpoint(endpoint_name)
-    print(f"Endpoint {endpoint_name} is being updated")
-    client.update_served_models(endpoint_name, config)
-except Exception as ex:
-    print(ex)
-    print(f"New endpoint {endpoint_name} is being created")
-    client.create_inference_endpoint(data)
 
 # COMMAND ----------
+from mlops_demo_aws.deployment.model_serving.serving import perform_integration_test, perform_prod_deployment
+from mlops_demo_aws.utils import get_deployed_model_stage_for_env, get_model_name
 
+model_name = get_model_name(env)
+endpoint_name = f"{model_name}-{env}"
+strage = get_deployed_model_stage_for_env(env)
 
+if test_mode:
+    endpoint_name = f"{model_name}-integration-test-endpoint"
+    perform_integration_test(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
 
-# COMMAND ----------
+elif not test_mode:
+    endpoint_name = f"{model_name}-v{model_version}"
+    perform_prod_deployment(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
 
-client.update_served_models(data)
-
-# COMMAND ----------
-
-# env = "staging"
-# model_name = "staging-mlops-demo-aws-model"
-# model_version = "3"
-endpoint_name = f"{model_name}_version_{model_version}"
-models = [
-    {
-        "model_name": model_name,
-        "model_version": model_version,
-        "workload_size": "Small",
-        "scale_to_zero_enabled": False,
-    }
-]
-client.create_inference_endpoint(endpoint_name, models)
-
-# COMMAND ----------
-
-client.list_inference_endpoints()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ## Check the state of your endpoint
-# MAGIC
-# MAGIC We can check on the status of our endpoint to see if it is ready to receive traffic. Note that when the update is complete and the endpoint is ready to be queried, the `pending_config` is no longer populated.
-
-# COMMAND ----------
-
-import time
-
-endpoint = client.get_inference_endpoint(endpoint_name)
-
-while endpoint['state']['config_update'] == "IN_PROGRESS":
-  time.sleep(5)
-  endpoint = client.get_inference_endpoint(endpoint_name)
-  print(endpoint["name"], endpoint["state"])
-
-# COMMAND ----------
-
-client.get_inference_endpoint(endpoint_name)
 
 

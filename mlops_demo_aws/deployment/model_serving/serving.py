@@ -1,4 +1,10 @@
+import sys
+import pathlib
 
+sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
+
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import json
 import logging
@@ -7,6 +13,7 @@ import pathlib
 import time
 from typing import Any
 
+import click as click
 from databricks_cli.configure.config import _get_api_client
 from databricks_cli.configure.provider import EnvironmentVariableConfigProvider
 from databricks_cli.sdk import ApiClient
@@ -16,6 +23,10 @@ import pandas as pd
 from pyspark.sql import SparkSession
 import requests
 from requests.exceptions import HTTPError
+import yaml
+
+from mlops_demo_aws.deployment.model_serving.endpoint_performance import test_endpoint_locust
+from mlops_demo_aws.utils import get_model_name, get_deployed_model_stage_for_env
 
 PRODUCTION_DEPLOYMENT = "production_deployment"
 INTEGRATION_TEST = "integration_test"
@@ -29,13 +40,13 @@ def create_spark_session():
 
 
 def prepare_scoring_data() -> pd.DataFrame:
-    input_path = pathlib.Path.cwd() / "model_serving_mlops" / "training" / "data" / "sample.parquet"
+    input_path = pathlib.Path.cwd() / "mlops_demo_aws" / "training" / "data" / "sample.parquet"
     input_pdf = pd.read_parquet(str(input_path.absolute()))
-    return input_pdf.drop(columns=["fare_amount"])
+    return input_pdf.drop(columns=["price"])
 
 
 def get_model_version_for_stage(model_name: str, stage: str) -> str:
-    versions = mlflow_client.get_latest_versions(model_name, stages=[stage])
+    versions = mlflow_client.get_latest_versions(model_name)
     return str(max([int(v.version) for v in versions]))
 
 
@@ -193,7 +204,8 @@ def get_model_endpoint_config(api_client: ApiClient, endpoint_name: str) -> dict
     try:
         res = api_client.perform_query("GET", f"/serving-endpoints/{endpoint_name}")
         return res
-    except HTTPError:
+    except HTTPError as err:
+        print(err)
         return None
 
 
@@ -221,7 +233,7 @@ def perform_integration_test(
     create_serving_endpoint(api_client, endpoint_name, model_name, model_version)
     time.sleep(100)
     if wait_for_endpoint_to_become_ready(api_client, endpoint_name):
-        #test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, test_data_df)
+        test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, test_data_df)
         delete_endpoint(api_client, endpoint_name)
     else:
         print("Endpoint failed to become ready within timeout. ")
@@ -236,13 +248,65 @@ def perform_prod_deployment(
     existing_endpt_conf = get_model_endpoint_config(api_client, endpoint_name)
     model_version = get_model_version_for_stage(model_name, stage)
     if existing_endpt_conf:
+        print(f"Updating existing endpoint : {endpoint_name}")
         deploy_new_version_to_existing_endpoint(api_client, endpoint_name, model_name, model_version)
     else:
+        print(f"creating new endpoint : {endpoint_name}")
         create_serving_endpoint(api_client, endpoint_name, model_name, model_version)
     time.sleep(100)
     if wait_for_endpoint_to_become_ready(api_client, endpoint_name):
-        #test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, df)
-        print("production endpoint is ready")
+        test_endpoint_locust(endpoint_name, latency_p95_threshold, qps_threshold, df)
     else:
         raise Exception(f"Production endpoint {endpoint_name} is not ready!")
 
+
+@click.command()
+@click.option(
+    "--mode",
+    type=click.Choice([INTEGRATION_TEST, PRODUCTION_DEPLOYMENT]),
+    default=INTEGRATION_TEST,
+    help="""Run mode. Valid values are 'integration_test' for the test deployment in Staging environment
+        and  'production_deployment' for model deployment in Production environment""",
+)
+@click.option(
+    "--env",
+    type=click.STRING,
+    default="staging",
+    help="""Target environment. Valid values are "dev", "staging", "prod".""",
+)
+@click.option(
+    "--config",
+    required=True,
+    type=click.STRING,
+    help="""Path to the configuration file.""",
+)
+def main(mode: str, env: str, config: str):
+    model_name = "test-mlops-demo-aws-model"
+    print(mlflow_client.get_latest_versions(model_name))
+    #get_model_name(env)
+    endpoint_name = f"{model_name}-{env}"
+    strage = get_deployed_model_stage_for_env(env)
+    with open(config, "r") as file:
+        config_dict = yaml.safe_load(file)
+    if mode == INTEGRATION_TEST:
+        perform_integration_test(
+            endpoint_name,
+            model_name,
+            strage,
+            config_dict.get("latency_p95_threshold", 1000),
+            config_dict.get("qps_threshold", 1),
+        )
+    elif mode == PRODUCTION_DEPLOYMENT:
+        perform_prod_deployment(
+            endpoint_name,
+            model_name,
+            strage,
+            config_dict.get("latency_p95_threshold", 1000),
+            config_dict.get("qps_threshold", 1),
+        )
+    else:
+        raise Exception(f"Wrong value for mode parameter: {mode}")
+
+
+if __name__ == "__main__":
+    main()

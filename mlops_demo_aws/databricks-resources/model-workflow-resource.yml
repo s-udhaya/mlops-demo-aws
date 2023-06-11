@@ -10,7 +10,7 @@ model_workflow_cluster: &model_workflow_cluster
   new_cluster:
     num_workers: 1
     spark_version: 13.0.x-cpu-ml-scala2.12
-    instance_pool_id: '0603-175909-lent44-pool-5losrriq'
+    instance_pool_id: '0605-090612-polo106-pool-l0jj3imi'
     custom_tags:
       clusterSource: mlops-stack/0.1
 
@@ -30,9 +30,12 @@ resources:
         - task_key: Train
           job_cluster_key: model_training_job_cluster
           notebook_task:
-            notebook_path: ../training/notebooks/Train.py
+            notebook_path: mlops_demo_aws/training/notebooks/Train
+            source: git
             base_parameters:
               env: ${bundle.environment}
+              experiment_name: ${var.experiment_name}
+              model_name: ${var.model_name}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ModelValidation
@@ -40,10 +43,12 @@ resources:
           depends_on:
             - task_key: Train
           notebook_task:
-            notebook_path: ../validation/notebooks/ModelValidation.py
+            notebook_path: mlops_demo_aws/validation/notebooks/ModelValidation
+            source: git
             base_parameters:
               env: ${bundle.environment}
               experiment_name: ${var.experiment_name}
+              model_name: ${var.model_name}
               # The `run_mode` defines whether model validation is enabled or not.
               # It can be one of the three values:
               # `disabled` : Do not run the model validation notebook.
@@ -76,7 +81,8 @@ resources:
           depends_on:
             - task_key: ModelValidation
           notebook_task:
-            notebook_path: ../deployment/model_deployment/notebooks/ModelDeployment.py
+            notebook_path: mlops_demo_aws/deployment/model_deployment/notebooks/ModelDeployment
+            source: git
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
@@ -86,11 +92,16 @@ resources:
           depends_on:
             - task_key: ModelDeployment
           notebook_task:
-            notebook_path: ../deployment/model_serving/notebooks/ModelServing.py
+            notebook_path: mlops_demo_aws/deployment/model_serving/notebooks/ModelServing
+            source: git
             base_parameters:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      git_source:
+        git_provider: "gitHub"
+        git_url: "https://github.com/s-udhaya/mlops-demo-aws.git"
+        git_commit: ${bundle.git.commit}
 
       schedule:
         quartz_cron_expression: "0 0 9 * * ?" # daily at 9am

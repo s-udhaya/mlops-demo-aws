@@ -1,1 +1,45 @@
-# TODO: Add data monitoring support for mlops
+# TODO: Add data model_monitoring support for mlops
+new_cluster: &new_cluster
+  new_cluster:
+    num_workers: 3
+    spark_version: 12.2.x-cpu-ml-scala2.12
+    node_type_id: i3.xlarge
+    custom_tags:
+      clusterSource: mlops-stack/0.1
+
+permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+resources:
+  jobs:
+    model_monitoring_job:
+      name: ${bundle.environment}-mlops-demo-aws-model-model_monitoring-job
+      tasks:
+        - task_key: model_monitoring_job
+          <<: *new_cluster
+          notebook_task:
+            notebook_path: mlops_demo_aws/deployment/model_monitoring/notebooks/ModelMonitoring
+            source: git
+            base_parameters:
+              env: ${bundle.environment}
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+      git_source:
+        git_provider: "gitHub"
+        git_url: "https://github.com/s-udhaya/mlops-demo-aws.git"
+        git_commit: ${bundle.git.commit}
+
+      schedule:
+        quartz_cron_expression: "0 0 11 * * ?" # daily at 11am
+        timezone_id: UTC
+      <<: *permissions
+      # If you want to turn on notifications for this job, please uncomment the below code,
+      # and provide a list of emails to the on_failure argument.
+      #
+      #  email_notifications:
+      #    on_failure:
+      #      - first@company.com
+      #      - second@company.com

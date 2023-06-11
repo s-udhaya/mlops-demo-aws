@@ -67,7 +67,7 @@ dbutils.widgets.text(
 )
 dbutils.widgets.dropdown("run_mode", "disabled", ["disabled", "dry_run", "enabled"], "Run Mode")
 dbutils.widgets.dropdown("enable_baseline_comparison", "false", ["true", "false"], "Enable Baseline Comparison")
-dbutils.widgets.text("validation_input", "SELECT * FROM delta.`dbfs:/databricks-datasets/nyctaxi-with-zipcodes/subsampled`", "Validation Input")
+dbutils.widgets.text("validation_input", "SELECT * FROM udhay_demo.datasets.sf_airbnb_base_table", "Validation Input")
 
 dbutils.widgets.text("custom_metrics_loader_function", "custom_metrics", "Custom Metrics Loader Function")
 dbutils.widgets.text("validation_thresholds_loader_function", "validation_thresholds", "Validation Thresholds Loader Function")
@@ -105,11 +105,7 @@ import mlflow
 import os
 import tempfile
 import traceback
-from mlflow.recipes.utils import (
-    get_recipe_config,
-    get_recipe_name,
-    get_recipe_root_path,
-)
+
 from mlflow.tracking.client import MlflowClient
 
 client = MlflowClient()
@@ -119,27 +115,7 @@ experiment_name = dbutils.widgets.get("experiment_name")
 env = dbutils.widgets.get("env")
 assert env, "env notebook parameter must be specified"
 
-def get_model_type_from_recipe():
-    try:
-        recipe_config = get_recipe_config("../training", f"databricks-{env}")
-        problem_type = recipe_config.get("recipe").split("/")[0]
-        if problem_type.lower() == "regression":
-            return "regressor"
-        elif problem_type.lower() == "classification":
-            return "classifier"
-        else:
-            raise Exception(f"Unsupported recipe {recipe_config}")
-    except Exception as ex:
-        print(f"Not able to get model type from mlflow recipe databricks-{env}.")
-        raise ex
 
-def get_targets_from_recipe():
-    try:
-        recipe_config = get_recipe_config("../training", f"databricks-{env}")
-        return recipe_config.get("target_col")
-    except Exception as ex:
-        print(f"Not able to get targets from mlflow recipe databricks-{env}.")
-        raise ex
 
 
 # set model evaluation parameters that can be inferred from the job
@@ -173,8 +149,8 @@ validation_input = dbutils.widgets.get("validation_input")
 assert validation_input
 data = spark.sql(validation_input)
 
-model_type = get_model_type_from_recipe()
-targets = get_targets_from_recipe()
+model_type = "regression"
+targets = "price"
 assert model_type
 assert targets
 

@@ -22,6 +22,27 @@ def get_deployed_model_stage_for_env(env):
         "dev": "Staging",
         "staging": "Staging",
         "prod": "Production",
-        "test": "Production",
+        "test": "Staging",
     }
     return _MODEL_STAGE_FOR_ENV[env]
+
+
+def get_model_name(env: str, test_mode: bool = False):
+    """Get the registered model name for the current environment.
+
+    In dev or when running integration tests, we rely on a hardcoded model name.
+    Otherwise, e.g. in production jobs, we read the model name from Terraform config-as-code output.
+
+    Args:
+        env (str): Current environment
+        test_mode (bool, optional): Whether the notebook is running in test mode.. Defaults to False.
+
+    Returns:
+        _type_: Registered Model name.
+    """
+    if env == "dev" or test_mode:
+        resource_name_suffix = _get_resource_name_suffix(test_mode)
+        return f"model-serving-mlops-model{resource_name_suffix}"
+    else:
+        # Read ml model name from model_serving_mlops/terraform
+        return _get_ml_config_value(env, "model-serving-mlops_model_name")

@@ -50,13 +50,10 @@ notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.ge
 
 # COMMAND ----------
 
-try:
-    # Profile from databricks workflow input will be used.
-    env = dbutils.widgets.get("env")
-    profile = f"databricks-{env}"
-except:
-    # When the users manually run the notebook, we use the "databricks-dev" profile instead of staging, prod or test.
-    profile = "databricks-dev"
+
+env = dbutils.widgets.get("env")
+experiment_name = dbutils.widgets.get("experiment_name")
+model_name = dbutils.widgets.get("model_name")
 
 # COMMAND ----------
 
@@ -75,17 +72,7 @@ client = MlflowClient()
 
 # COMMAND ----------
 
-from mlflow.recipes.utils import (
-    get_recipe_config,
-    get_recipe_root_path,
-)
-
-root_path = get_recipe_root_path()
-config = get_recipe_config(root_path, profile)
-if config['experiment']['name'].startswith(f"/{env}-mlops-demo-aws-experiment"):
-    print("WARNING: The experiment name may not have been set correctly. Please confirm that the experiment name in the profile YAML file matches the experiment_name variable in mlops_demo_aws/bundle.yml.")
-
-mlflow.set_experiment(config['experiment']['name'])
+mlflow.set_experiment(experiment_name)
 
 # COMMAND ----------
 
@@ -144,7 +131,7 @@ with mlflow.start_run(run_name="random_forest_regressor") as mlflow_run:
 
 # Register model to MLflow Model Registry
 run_id = mlflow_run.info.run_id
-model_version = mlflow.register_model(model_uri=f"runs:/{run_id}/model", name=config['model_registry']['model_name'])
+model_version = mlflow.register_model(model_uri=f"runs:/{run_id}/model", name=model_name)
 
 # COMMAND ----------
 
