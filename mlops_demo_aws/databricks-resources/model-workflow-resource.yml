@@ -64,7 +64,7 @@ resources:
               enable_baseline_comparison: "false"
               # Please refer to data parameter in mlflow.evaluate documentation https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.evaluate
               # TODO: update validation_input
-              validation_input: SELECT * FROM delta.`dbfs:/databricks-datasets/nyctaxi-with-zipcodes/subsampled`
+              validation_input: SELECT * FROM udhay_demo.datasets.sf_airbnb_base_table
               # Specifies the name of the function in mlops-demo-aws/training_validation_deployment/validation/validation.py that returns custom metrics.
               # TODO(optional): custom_metrics_loader_function
               custom_metrics_loader_function: custom_metrics
