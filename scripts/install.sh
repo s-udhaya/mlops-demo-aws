@@ -21,7 +21,7 @@ cd "$(mktemp -d)"
 # Download release archive.
 
 # Unzip release archive.
-unzip -q "scripts/databricks_cli_linux_amd64.zip"
+unzip -q -o "scripts/databricks_cli_linux_amd64.zip"
 
 # Add databricks to path.
 chmod +x ./databricks
