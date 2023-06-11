@@ -30,87 +30,107 @@
 #
 # Name of the current environment
 
-dbutils.widgets.dropdown("env", "None", ["None", "test", "staging", "prod"], "Environment Name")
-# Test mode
-dbutils.widgets.dropdown("test_mode", "False", ["True", "False"], "Test Mode")
-
 
 # COMMAND ----------
 
-# import os
-# import sys
-# notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
-# %cd $notebook_path
-# %cd ..
-# sys.path.append("../..")
-
-# COMMAND ----------
-
-
-# get API URL and token
-databricks_url = dbutils.secrets.get(scope = "udhay-mlops-demo", key = "db_host_mlops")
-databricks_token = dbutils.secrets.get(scope = "udhay-mlops-demo", key = "db_token_mlops")
-
-
-# COMMAND ----------
-import sys
-
-sys.path.append("..")
-
-# COMMAND ----------
 env = dbutils.widgets.get("env")
-_test_mode = dbutils.widgets.get("test_mode")
-test_mode = True if _test_mode.lower() == "true" else False
 model_name = dbutils.jobs.taskValues.get("Train", "model_name", debugValue="test-mlops-demo-aws-model")
 model_version = dbutils.jobs.taskValues.get("Train", "model_version", debugValue="1")
 assert env != "None", "env notebook parameter must be specified"
 assert model_name != "", "model_name notebook parameter must be specified"
 assert model_version != "", "model_version notebook parameter must be specified"
 
+# COMMAND ----------
+
+if env == "test":
+    mode = "integration_test"
+else:
+    mode = "production_deployment"
 
 # COMMAND ----------
-from mlops_demo_aws.deployment.model_serving.serving import perform_integration_test, perform_prod_deployment
-from mlops_demo_aws.utils import get_deployed_model_stage_for_env, get_model_name
 
-model_name = get_model_name(env)
-endpoint_name = f"{model_name}-{env}"
-strage = get_deployed_model_stage_for_env(env)
+import random
+import string
+import datetime
+import requests
+import time
 
 github_repo = dbutils.secrets.get("udhay-mlops-demo", "github_repo")
-token = dbutils.secrets.get("udhay-mlops-demo", "github_token")
+github_owner = dbutils.secrets.get("udhay-mlops-demo", "github_owner")
+github_token = dbutils.secrets.get("udhay-mlops-demo", "github_token")
+workflow = f"mlops-demo-aws-deploy-model-serving-dispatch-{env}.yml"
+
+authorization = f"Token {github_token}"
 
 github_server = "https://api.github.com"
 
+# generate a random id
+run_identifier = ''.join(random.choices(string.ascii_uppercase + string.digits, k=15))
+# filter runs that were created after this date minus 5 minutes
+delta_time = datetime.timedelta(minutes=5)
+run_date_filter = (datetime.datetime.utcnow() - delta_time).strftime("%Y-%m-%dT%H:%M")
 
-cd_trigger_url = f"{github_server}/repos/{github_repo}/actions/workflows/mlops-demo-aws-deploy-model-serving-{env}.yml/dispatches"
-authorization = f"token {token}"
-
-# COMMAND ----------
-import requests
+cd_trigger_url = f"{github_server}/repos/{github_owner}/{github_repo}/actions/workflows/{workflow}/dispatches"
+workflow_id = ""
 
 response = requests.post(
     cd_trigger_url,
-    json={"ref": "main", "inputs": {"modelUri": model_name}},
+    json={"ref": "main", "inputs": {"id": run_identifier, "modelName": model_name, "modelVersion": model_version,
+                                    "deploymentMode": mode}},
     headers={"Authorization": authorization},
 )
-assert response.ok, (
-    f"Triggering CD workflow {cd_trigger_url} for model {model_name} "
-    f"failed with status code {response.status_code}. Response body:\n{response.content}"
-)
+
+print(f"dispatch workflow status: {response.status_code} | workflow identifier: {run_identifier}")
+
+while workflow_id == "":
+    get_run_url = f"{github_server}/repos/{github_owner}/{github_repo}/actions/runs?created=%3E{run_date_filter}"
+    r = requests.get(get_run_url,
+                     headers={"Authorization": authorization})
+    runs = r.json()["workflow_runs"]
+
+    if len(runs) > 0:
+        for workflow in runs:
+            jobs_url = workflow["jobs_url"]
+            print(f"get jobs_url {jobs_url}")
+
+            r = requests.get(jobs_url, headers={"Authorization": authorization})
+
+            jobs = r.json()["jobs"]
+            if len(jobs) > 0:
+                # we only take the first job, edit this if you need multiple jobs
+                job = jobs[0]
+                steps = job["steps"]
+                if len(steps) >= 2:
+                    second_step = steps[1]  # if you have position the run_identifier step at 1st position
+                    if second_step["name"] == run_identifier:
+                        workflow_id = job["run_id"]
+                else:
+                    print("waiting for steps to be executed...")
+                    time.sleep(3)
+            else:
+                print("waiting for jobs to popup...")
+                time.sleep(3)
+    else:
+        print("waiting for workflows to popup...")
+        time.sleep(3)
+
+print(f"workflow_id: {workflow_id}")
 
 # COMMAND ----------
-print(
-    f"Successfully triggered model CD deployment workflow for {model_name}. See your CD provider to check the "
-    f"status of model deployment"
-)
 
-# if test_mode:
-#     endpoint_name = f"{model_name}-integration-test-endpoint"
-#     perform_integration_test(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
-#
-# elif not test_mode:
-#     endpoint_name = f"{model_name}-v{model_version}"
-#     perform_prod_deployment(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
-#
-#
+import time
 
+get_job_url = f"{github_server}/repos/{github_owner}/{github_repo}/actions/runs/{workflow_id}/jobs"
+r = requests.get(get_job_url,
+                 headers={"Authorization": authorization})
+sleep_interval = 10
+while r.json()["jobs"][0]["conclusion"] is None:
+    time.sleep(sleep_interval)
+    r = requests.get(get_job_url,
+                     headers={"Authorization": authorization})
+    print("job is not finished, waiting for {sleep_interval} more seconds")
+
+if r.json()["jobs"][0]["conclusion"] != "success":
+    raise ("Model serving is failed")
+else:
+    print("Model serving is successful")
