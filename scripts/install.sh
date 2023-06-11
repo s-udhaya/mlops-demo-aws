@@ -25,5 +25,5 @@ unzip -q -o "scripts/databricks_cli_linux_amd64.zip"
 
 # Add databricks to path.
 chmod +x ./databricks
-cp ./databricks "$TARGET"
+sudo cp ./databricks "$TARGET"
 echo "Installed $($TARGET/databricks -v) at $TARGET/databricks."
