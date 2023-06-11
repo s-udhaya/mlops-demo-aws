@@ -17,9 +17,6 @@ on:
       modelVersion:
         type: string
         required: true
-      workspaceEnv:
-        type: string
-        required: true
       deploymentMode:
         type: string
         required: true
@@ -61,6 +58,5 @@ jobs:
             --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml \
             --model-name "${{ github.event.inputs.modelName }}"  \
             --model-version "${{ github.event.inputs.modelVersion }}"  \
-            --env "${{ github.event.inputs.workspaceEnv }}"  \
             --mode "${{ github.event.inputs.deploymentMode }}"
             echo "Success!"

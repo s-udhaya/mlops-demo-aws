@@ -267,12 +267,6 @@ def perform_prod_deployment(
         and  'production_deployment' for model deployment in Production environment""",
 )
 @click.option(
-    "--env",
-    type=click.STRING,
-    default="staging",
-    help="""Target environment. Valid values are "dev", "staging", "prod".""",
-)
-@click.option(
     "--config",
     required=True,
     type=click.STRING,
