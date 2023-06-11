@@ -6,12 +6,12 @@
 # This workflow is triggered in an automated manner by the model training job (see notebooks/TriggerModelDeploy.py)
 # after model training completes, to enable tracking and enforcing manual approval of model deployments in
 # CD, if desired.
-name: Staging Model Deployment
+name: Model serving deployment prod
 
 on:
   workflow_dispatch:
     inputs:
-      modeName:
+      modelName:
         type: string
         required: true
       modelVersion:
@@ -23,7 +23,7 @@ on:
 
 env:
   DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-  DATABRICKS_TOKEN: ${{ secrets.STAGING_WORKSPACE_TOKEN }}
+  DATABRICKS_TOKEN: ${{ secrets.PROD_WORKSPACE_TOKEN }}
   NODE_TYPE_ID: Standard_D3_v2
 
 jobs:

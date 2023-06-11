@@ -1,0 +1,62 @@
+# This GitHub workflow performs model deployment to staging
+# The workflow contents are largely the same as deploy-model-prod.yml but
+# we split staging and prod model deployment into separate workflows to simplify
+# separately tracking and viewing staging and prod model deployments via GitHub UI and API
+#
+# This workflow is triggered in an automated manner by the model training job (see notebooks/TriggerModelDeploy.py)
+# after model training completes, to enable tracking and enforcing manual approval of model deployments in
+# CD, if desired.
+name: Model serving deployment staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      modelName:
+        type: string
+        required: true
+      modelVersion:
+        type: string
+        required: true
+      deploymentMode:
+        type: string
+        required: true
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.STAGING_WORKSPACE_TOKEN }}
+  NODE_TYPE_ID: Standard_D3_v2
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r test-requirements.txt
+            pip install databricks-cli
+      - name: set pythonpath
+        run: |
+            echo "PYTHONPATH=$(pwd)" >> "$GITHUB_ENV"
+      - name: Deploy Databricks Model Serving endpoint
+        env:
+          MLFLOW_TRACKING_URI: databricks
+        
+        run: |
+            echo "Setting up Databricks Model Serving Endpoint with staging model..."
+            python mlops_demo_aws/deployment/model_serving/serving.py \
+            --config mlops_demo_aws/deployment/model_serving/model_serving_config.yaml \
+            --model-name "${{ github.event.inputs.modelName }}"  \
+            --model-version "${{ github.event.inputs.modelVersion }}"  \
+            --mode "${{ github.event.inputs.deploymentMode }}"
+            echo "Success!"
