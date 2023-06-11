@@ -11,7 +11,7 @@ name: Staging Model Deployment
 on:
   workflow_dispatch:
     inputs:
-      modeName:
+      modelName:
         type: string
         required: true
       modelVersion:
