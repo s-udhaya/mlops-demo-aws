@@ -11,6 +11,9 @@ name: Model serving deployment prod
 on:
   workflow_dispatch:
     inputs:
+      id:
+        type: string
+        required: false
       modelName:
         type: string
         required: true
@@ -27,11 +30,15 @@ env:
   NODE_TYPE_ID: Standard_D3_v2
 
 jobs:
-  staging:
+  id:
+    name: staging
     runs-on: ubuntu-latest
     environment: staging
 
     steps:
+      - name: ${{github.event.inputs.id}}
+        run: echo run identifier ${{ inputs.id }}
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
