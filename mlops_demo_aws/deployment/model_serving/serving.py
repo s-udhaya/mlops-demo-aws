@@ -70,6 +70,7 @@ def read_config(file_name: str) -> dict[str, str]:
 
 
 def create_serving_endpoint(api_client: ApiClient, endpoint_name: str, model_name: str, model_version: str):
+    dbfs_table_path = f"dbfs:/Users/udhayaraj.sivalingam@databricks.com/data/{model_name}"
     req = {
         "name": endpoint_name,
         "config": {
@@ -84,19 +85,22 @@ def create_serving_endpoint(api_client: ApiClient, endpoint_name: str, model_nam
             ],
             "traffic_config": {"routes": [{"served_model_name": model_name, "traffic_percentage": 100}]},
         },
+    "inference_table_config": {
+        "dbfs_destination_path": dbfs_table_path
     }
-    return api_client.perform_query("POST", "/serving-endpoints", data=req)
+    }
+    return api_client.perform_query("POST", "/preview/serving-endpoints", data=req)
 
 
 def delete_endpoint(api_client: ApiClient, endpoint_name: str):
     try:
-        return api_client.perform_query("DELETE", f"/serving-endpoints/{endpoint_name}")
+        return api_client.perform_query("DELETE", f"/preview/serving-endpoints/{endpoint_name}")
     except Exception as e:
         return str(e)
 
 
 def check_if_endpoint_is_ready(api_client: ApiClient, endpoint_name: str):
-    res = api_client.perform_query("GET", f"/serving-endpoints/{endpoint_name}")
+    res = api_client.perform_query("GET", f"/preview/serving-endpoints/{endpoint_name}")
     print(res)
     state = res.get("state")
     if state:
@@ -167,7 +171,7 @@ def test_endpoint(
 
 
 def get_max_version_for_model(api_client: ApiClient, endpoint_name: str, model_name: str):
-    res = api_client.perform_query("GET", f"/serving-endpoints/{endpoint_name}")
+    res = api_client.perform_query("GET", f"/preview/serving-endpoints/{endpoint_name}")
     if res.status_code == 404:
         return None
     if res.status_code != 200:
@@ -196,13 +200,13 @@ def deploy_new_version_to_existing_endpoint(
         ],
         "traffic_config": {"routes": [{"served_model_name": model_name, "traffic_percentage": 100}]},
     }
-    res = api_client.perform_query("PUT", f"/serving-endpoints/{endpoint_name}/config", data=update_endpoint_req)
+    res = api_client.perform_query("PUT", f"/preview/serving-endpoints/{endpoint_name}/config", data=update_endpoint_req)
     print(res)
 
 
 def get_model_endpoint_config(api_client: ApiClient, endpoint_name: str) -> dict[str, Any]:
     try:
-        res = api_client.perform_query("GET", f"/serving-endpoints/{endpoint_name}")
+        res = api_client.perform_query("GET", f"/preview/serving-endpoints/{endpoint_name}")
         return res
     except HTTPError as err:
         print(err)
