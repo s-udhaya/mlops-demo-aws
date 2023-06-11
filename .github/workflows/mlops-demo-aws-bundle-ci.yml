@@ -28,7 +28,7 @@ jobs:
         run: |
           ls
           chmod +x ../scripts/install.sh
-          ../scripts/install.sh
+          sudo ../scripts/install.sh
         shell: bash
       - name: Validate Bundle For Staging Environment
         id: validate
