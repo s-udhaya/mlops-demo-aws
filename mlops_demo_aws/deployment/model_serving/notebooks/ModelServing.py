@@ -76,13 +76,41 @@ model_name = get_model_name(env)
 endpoint_name = f"{model_name}-{env}"
 strage = get_deployed_model_stage_for_env(env)
 
-if test_mode:
-    endpoint_name = f"{model_name}-integration-test-endpoint"
-    perform_integration_test(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+github_repo = dbutils.secrets.get("udhay-mlops-demo", "github_repo")
+token = dbutils.secrets.get("udhay-mlops-demo", "github_token")
 
-elif not test_mode:
-    endpoint_name = f"{model_name}-v{model_version}"
-    perform_prod_deployment(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+github_server = "https://api.github.com"
 
 
+cd_trigger_url = f"{github_server}/repos/{github_repo}/actions/workflows/mlops-demo-aws-deploy-model-serving-{env}.yml/dispatches"
+authorization = f"token {token}"
+
+# COMMAND ----------
+import requests
+
+response = requests.post(
+    cd_trigger_url,
+    json={"ref": "main", "inputs": {"modelUri": model_name}},
+    headers={"Authorization": authorization},
+)
+assert response.ok, (
+    f"Triggering CD workflow {cd_trigger_url} for model {model_name} "
+    f"failed with status code {response.status_code}. Response body:\n{response.content}"
+)
+
+# COMMAND ----------
+print(
+    f"Successfully triggered model CD deployment workflow for {model_name}. See your CD provider to check the "
+    f"status of model deployment"
+)
+
+# if test_mode:
+#     endpoint_name = f"{model_name}-integration-test-endpoint"
+#     perform_integration_test(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+#
+# elif not test_mode:
+#     endpoint_name = f"{model_name}-v{model_version}"
+#     perform_prod_deployment(endpoint_name, model_name, model_version, latency_p95_threshold=1000, qps_threshold=1)
+#
+#
 
