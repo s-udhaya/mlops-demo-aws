@@ -2,19 +2,6 @@
 
 set -e
 
-# Make sure the target directory is writable.
-if [ ! -w "$TARGET" ]; then
-    echo "Target directory $TARGET is not writable."
-    echo "Please run this script through sudo to allow writing to $TARGET."
-    exit 1
-fi
-
-# Make sure we don't overwrite an existing installation.
-if [ -f "$TARGET/databricks" ]; then
-    echo "Target path $TARGET/databricks already exists."
-    exit 1
-fi
-
 echo "creating temp directory"
 # Change into temporary directory.
 cd "$(mktemp -d)"
