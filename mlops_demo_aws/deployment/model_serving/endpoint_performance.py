@@ -103,4 +103,4 @@ def test_endpoint_locust(
             f"QPS requirements are not met. Observed QPS for the requests is {qps}. At least {qps_threshold} was expected."
         )
     print("latency and qps requirements are met")
-    print(f"Observed qps: {qps} and latency(95 percentile): {p95}")
+    print(f"Observed qps: {qps} and latency(95 percentile): {p95}ms")
