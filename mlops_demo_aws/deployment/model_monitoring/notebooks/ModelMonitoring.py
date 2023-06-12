@@ -59,13 +59,13 @@ from pyspark.sql import functions as F, types as T
 """
 Required parameters in order to run this notebook.
 """
-env = dbutils.widgets.get("env")
-model_name = dbutils.widgets.get("model_name")
+env = "staging"#dbutils.widgets.get("env")
+model_name = "staging-mlops-demo-aws-model"#dbutils.widgets.get("model_name")
 
 ENDPOINT_NAME = f"{model_name}-endpoint"  # Name of the serving endpoint
 PROBLEM_TYPE = "regression"  # ML problem type, one of "classification"/"regression"
 CATALOG_NAME = "udhay_demo"  # Name of the catalog to use
-OUTPUT_SCHEMA_NAME = f"{env}-monitoring"  # Name of the output database to store tables in
+OUTPUT_SCHEMA_NAME = f"{env}_monitoring"  # Name of the output database to store tables in
 
 # Validate that all required inputs have been provided
 if None in [ENDPOINT_NAME, PROBLEM_TYPE, CATALOG_NAME, OUTPUT_SCHEMA_NAME]:
@@ -76,9 +76,9 @@ if None in [ENDPOINT_NAME, PROBLEM_TYPE, CATALOG_NAME, OUTPUT_SCHEMA_NAME]:
 Optional parameters to control monitoring analysis.
 """
 # Monitoring configuration parameters, see create_or_update_monitor() documentation for more details.
-GRANULARITIES = ["1 day"]  # Window sizes to analyze data over
+GRANULARITIES = ["1 hour"]  # Window sizes to analyze data over
 LABEL_COL = "price"  # Name of columns holding labels. Change this if you join your own labels via JOIN_TABLES above.
-BASELINE_TABLE = None  # Baseline table name, if any, for computing baseline drift
+BASELINE_TABLE = f"{model_name.replace('-', '_')}_baseline" # Baseline table name, if any, for computing baseline drift
 SLICING_EXPRS = None  # Expressions to slice data with
 CUSTOM_METRICS = None  # A list of custom metrics to compute
 
@@ -100,7 +100,7 @@ RESPONSE_FIELD = None
 # Tables must be registered in Hive Metastore.
 JOIN_TABLES = [
     # Example: ("labels_table", ["labels", "inference_id"], ["inference_id"])
-    ("udhay_demo.datasets.sf_airbnb_label_table", ["price", "inference_id"], ["inference_id"])
+    ("udhay_demo.datasets.sf_airbnb_label_table", ["price", "id"], ["id"])
 ]
 
 # Storage location information for intermediate/output tables. Change these if you want to create more than one monitor
@@ -540,7 +540,7 @@ if REQUEST_FIELDS is None or RESPONSE_FIELD is None:
         raise Exception(
             "No RESPONSE_FIELD was provided, and no output signature was logged for any model served by the endpoint. "
             "Please explicitly define RESPONSE_FIELD in the Parameters section.")
-    REQUEST_FIELDS.extend([StructField('inference_id', StringType(), True)])
+    REQUEST_FIELDS.extend([StructField('id', StringType(), True)])
 
 # COMMAND ----------
 
@@ -570,7 +570,7 @@ display(pd.DataFrame({"Destination DBFS path": dbfs_path}, index=[0]))
 # COMMAND ----------
 
 # Read the requests as a stream so we can incrementally process them.
-requests_raw = read_requests_as_stream(dbfs_path=dbfs_path).drop("inference_id")
+requests_raw = read_requests_as_stream(dbfs_path=dbfs_path)#.drop("inference_id")
 
 # Process the requests.
 requests_processed = process_requests(
@@ -669,7 +669,7 @@ dm.create_or_update_monitor(
         problem_type=PROBLEM_TYPE,
     ),
     output_schema_name=OUTPUT_SCHEMA_NAME,
-    baseline_table_name=BASELINE_TABLE,
+    baseline_table_name=f"{CATALOG_NAME}.{OUTPUT_SCHEMA_NAME}.{BASELINE_TABLE}",
     slicing_exprs=SLICING_EXPRS,
     custom_metrics=CUSTOM_METRICS,
     linked_entities={f"models:/{served_model_name}" for served_model_name in served_model_names},

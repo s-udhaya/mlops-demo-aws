@@ -98,6 +98,17 @@ resources:
               env: ${bundle.environment}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+        - task_key: MonitoringBaselineTableCreator
+          job_cluster_key: model_training_job_cluster
+          depends_on:
+            - task_key: ModelServing
+          notebook_task:
+            notebook_path: mlops_demo_aws/deployment/model_monitoring/notebooks/MonitoringBaselineTableCreator
+            source: git
+            base_parameters:
+              env: ${bundle.environment}
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       git_source:
         git_provider: "gitHub"
         git_url: "https://github.com/s-udhaya/mlops-demo-aws.git"
