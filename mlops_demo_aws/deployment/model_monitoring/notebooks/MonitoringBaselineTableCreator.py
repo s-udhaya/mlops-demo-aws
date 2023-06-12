@@ -25,7 +25,7 @@ loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=model_uri, result_type="
 
 baseline_input_df_with_pred =(baseline_input_df
                              .withColumn(PREDICTION_COL, loaded_model(struct(*map(col, baseline_input_df.columns))))
-                             .withColumn(MODEL_VERSION_COL, lit(model_version)) )# Add model version column
+                             .withColumn(MODEL_VERSION_COL, lit(f"{model_name}_{model_version}")) )# Add model version column
 
 display(baseline_input_df_with_pred)
 
