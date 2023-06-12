@@ -102,7 +102,6 @@ def delete_endpoint(api_client: ApiClient, endpoint_name: str):
 
 def check_if_endpoint_is_ready(api_client: ApiClient, endpoint_name: str):
     res = api_client.perform_query("GET", f"/preview/serving-endpoints/{endpoint_name}")
-    print(res)
     state = res.get("state")
     if state:
         return state.get("ready") == "READY"
